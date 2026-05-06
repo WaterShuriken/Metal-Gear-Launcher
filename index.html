@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metal Gear: Allison's Collection</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="custom_css/theme.css">
+</head>
+<body data-theme="retro">
+    <script src="custom_js/script.js"></script>
+    <!-- UI Overlays -->
+    <div class="scanline"></div>
+    <div class="mgs-cog" onclick="toggleSettings()" title="Settings"></div>
+    <div class="mgs-power" onclick="window.close()" title="Exit"></div>
+
+    <!-- Hub Interface -->
+    <main class="hub-container text-center" style="margin-top: 15rem;">
+        <h1 class="mb-5 retro-only">MISSION SELECT</h1>
+        
+        <nav class="button-stack">
+            <a href="pages/timeline/release.html" class="btn-mgs">RELEASE ORDER</a>
+            <a href="pages/timeline/canon.html" class="btn-mgs">CANONICAL TIMELINE</a>
+            <a href="pages/timeline/chrono.html" class="btn-mgs">FULL CHRONOLOGY</a>
+        </nav>
+        
+        <footer class="status-text">
+            [STATUS: STANDBY] <br>
+            WAITING FOR COMMANDER DATA...
+        </footer>
+    </main>
+</body>
+</html>

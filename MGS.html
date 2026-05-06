@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Metal Gear Chronological Hub</h1>
+  <button onclick="launchGame()">Launch MGS1</button>
+
+  <script>
+    function launchGame(emulator, game) {
+      // Replace with your actual emulator and game path
+      const cmd = '"E:\\System\\Downloads\\Duckstation\\duckstation-qt-x64-ReleaseLTCG.exe" -batch "E:\\System\\Downloads\\Duckstation\\games\\Metal Gear Solid - Integral\\Metal Gear Solid - Integral (Japan) (En,Ja) (Disc 1).bin"';
+      window.electronAPI.launch(cmd);
+    }
+  </script>
+</body>
+</html>

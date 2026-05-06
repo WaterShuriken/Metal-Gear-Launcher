@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../custom_css/theme.css">
+    <style>
+        .canon-container {
+            width: 95vw !important;
+            max-width: 1400px !important;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+
+        .canon-flex-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            padding: 10px;
+            transform: scale(0.95); 
+            transform-origin: top center;
+        }
+
+        .canon-flex-grid .game-card {
+            flex: 0 1 15%;
+            min-width: 160px;
+            max-width: 190px;
+            aspect-ratio: 2/3;
+            margin-bottom: 10px;
+        }
+
+        .canon-flex-grid .game-card img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        .canon-flex-grid .game-card::before {
+            display: none !important;
+            content: none !important;
+        }
+    </style>
+</head>
+<body data-theme="retro">
+    <script src="../../custom_js/script.js"></script>
+    <div class="scanline"></div>
+    
+    <nav class="order-nav">
+        <div class="mgs-power" onclick="window.close()" title="Exit"></div>
+        <div class="nav-container">
+            <a href="../../index.html" class="nav-item">HUB</a>
+            <div class="nav-divider">|</div>
+            <a href="release.html" class="nav-item">RELEASE</a>
+            <a href="canon.html" class="nav-item">CANON</a>
+            <a href="chrono.html" class="nav-item">ALL GAMES</a>
+        </div>
+        <div class="mgs-cog" onclick="toggleSettings()" title="Settings"></div>
+    </nav>
+
+    <main class="hub-container canon-container">
+        <header class="text-center mb-3">
+            <h1 class="retro-only">CANONICAL TIMELINE</h1>
+        </header>
+
+        <!-- ERA FILTER -->
+        <div class="filter-system">
+            <div class="filter-group" id="time-filters">
+                <span class="section-label">[ ERA ]</span>
+                <button class="btn-filter active" data-filter="all" onclick="toggleTime('all', this)">ALL</button>
+                <button class="btn-filter" data-filter="retro" onclick="toggleTime('retro', this)">RETRO</button>
+                <button class="btn-filter" data-filter="modern" onclick="toggleTime('modern', this)">MODERN</button>
+            </div>
+            <!-- Invisible but required for the JS logic to not break -->
+            <div id="story-filters" style="display:none;">
+                <button class="btn-filter active" data-story="canon"></button>
+            </div>
+        </div>
+
+        <div class="canon-flex-grid mb-5">
+            <!-- 1. MGS3 -->
+            <div class="game-card" data-category="canon" data-retro="false" onclick="missionControl(event, 'emu', 'MGS HD/MGS3.xex', 'xenia/xenia.exe --fullscreen')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear_solid_3.png">
+                <div class="title-wrap"><span class="game-title">Snake Eater</span><span class="game-year">(1962)</span></div>
+            </div>
+
+            <!-- 2. PO -->
+            <div class="game-card" data-category="canon" data-retro="false" onclick="missionControl(event, 'emu', 'Metal Gear Solid - Portable Ops.iso', 'ppsspp/ppsspp.exe --fullscreen --escape-exit')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear_solid_portable_ops.png">
+                <div class="title-wrap"><span class="game-title">Portable Ops</span><span class="game-year">(1970)</span></div>
+            </div>
+
+            <!-- 3. PW -->
+            <div class="game-card" data-category="canon" data-retro="false" onclick="missionControl(event, 'emu', 'MGS PW/default.xex', 'xenia/xenia.exe --fullscreen')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear_solid_peace_walker.jpg">
+                <div class="title-wrap"><span class="game-title">Peace Walker</span><span class="game-year">(1974)</span></div>
+            </div>
+
+            <!-- 4. GZ -->
+            <div class="game-card" data-category="canon" data-retro="false" onclick="missionControl(event, 'steam', '311340', '', 'MgsGroundZeroes.exe')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear_solid_5_ground_zeroes.jpg">
+                <div class="title-wrap"><span class="game-title">Ground Zeroes</span><span class="game-year">(1975)</span></div>
+            </div>
+
+            <!-- 5. TPP -->
+            <div class="game-card" data-category="canon" data-retro="false" onclick="missionControl(event, 'steam', '287700', '', 'mgsvtpp.exe')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear_solid_v_phantom_pain.png">
+                <div class="title-wrap"><span class="game-title">The Phantom Pain</span><span class="game-year">(1984)</span></div>
+            </div>
+
+            <!-- 6. MG1 -->
+            <div class="game-card" data-category="canon" data-retro="true" onclick="missionControl(event, 'emu', 'Metal Gear Solid 3 - Subsistence Disc 2.iso', 'pcsx2/pcsx2.exe')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear.png">
+                <div class="title-wrap"><span class="game-title">Metal Gear</span><span class="game-year">(1995)</span></div>
+            </div>
+
+            <!-- 7. MG2 -->
+            <div class="game-card" data-category="canon" data-retro="true" onclick="missionControl(event, 'emu', 'Metal Gear Solid 3 - Subsistence Disc 2.iso', 'pcsx2/pcsx2.exe')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear_2.png">
+                <div class="title-wrap"><span class="game-title">Metal Gear 2</span><span class="game-year">(1999)</span></div>
+            </div>
+
+            <!-- 8. MGS1 -->
+            <div class="game-card" data-category="canon" data-retro="false" onclick="missionControl(event, 'emu', 'Metal Gear Solid.m3u', 'duckstation/duckstation-qt.exe -batch')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear_solid.jpg">
+                <div class="title-wrap"><span class="game-title">Metal Gear Solid</span><span class="game-year">(2005)</span></div>
+            </div>
+
+            <!-- 9. MGS2 -->
+            <div class="game-card" data-category="canon" data-retro="false" onclick="missionControl(event, 'emu', 'MGS HD/MGS2.xex', 'xenia/xenia.exe --fullscreen')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear_solid_2.png">
+                <div class="title-wrap"><span class="game-title">Sons of Liberty</span><span class="game-year">(2007-2009)</span></div>
+            </div>
+
+            <!-- 10. MGS4 -->
+            <div class="game-card" data-category="canon" data-retro="false" onclick="missionControl(event, 'emu', 'Metal Gear Solid 4 - Guns of the Patriots (USA) (En,Fr,De,Es,It) (v02.00).dec.iso', 'rpcs3/rpcs3.exe --fullscreen --no-gui')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear_solid_4.jpg">
+                <div class="title-wrap"><span class="game-title">Guns of the Patriots</span><span class="game-year">(2014)</span></div>
+            </div>
+
+            <!-- 11. MGR -->
+            <div class="game-card" data-category="canon" data-retro="false" onclick="missionControl(event, 'steam', '235460', '', 'METAL GEAR RISING REVENGEANCE.exe')">
+                <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
+                <img src="../../img/games/metal_gear_rising_revengeance.png">
+                <div class="title-wrap"><span class="game-title">MGR: Revengeance</span><span class="game-year">(2018)</span></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="abort-modal" class="mgs-modal">
+        <div class="mgs-modal-content">
+            <div class="mgs-modal-header">[ MISSION ALERT ]</div>
+            <div class="mgs-modal-body">
+                <p>ABORT ACTIVE MISSION?</p>
+            </div>
+            <div class="mgs-modal-footer">
+                <button class="btn-mgs btn-confirm" onclick="confirmAbort()">[ YES ]</button>
+                <button class="btn-mgs btn-cancel" onclick="closeAbortModal()">[ NO ]</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

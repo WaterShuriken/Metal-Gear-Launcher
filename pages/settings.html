@@ -1,0 +1,44 @@
+<div class="hub-container text-center">
+    <header>
+        <h1 class="mb-4">SYSTEM CONFIG</h1>
+    </header>
+    
+    <div class="button-stack">
+        <!-- Theme Selection -->
+        <section class="mb-3">
+            <p class="text-start opacity-75 section-label">[ INTERFACE THEME ]</p>
+            <button class="btn-mgs" onclick="setTheme('retro')">RETRO</button>
+            <button class="btn-mgs" onclick="setTheme('modern')">MODERN</button>
+            <button class="btn-mgs" onclick="setTheme('trans')">TRANS</button>
+            <button class="btn-mgs" onclick="setTheme('lesbian')">LESBIAN</button>
+            <button class="btn-mgs" onclick="setTheme('bisexual')">BISEXUAL</button>
+        </section>
+
+        <!-- Display Controls -->
+        <section class="mb-3">
+            <p class="text-start opacity-75 section-label">[ DISPLAY ]</p>
+            <button class="btn-mgs" onclick="toggleFullscreen()">
+                FULLSCREEN: <span id="fsStatus">OFF</span>
+            </button>
+            <select id="monitorSelect" class="btn-mgs w-100" onchange="changeMonitor()">
+                <option disabled selected>Detecting Monitors...</option>
+            </select>
+        </section>
+
+        <!-- Effects Toggle -->
+        <section class="mb-3">
+            <p class="text-start opacity-75 section-label">[ EFFECTS ]</p>
+            <button class="btn-mgs" onclick="toggleRetroEffects()">
+                RETRO EFFECTS: <span id="effectsStatus">ON</span>
+            </button>
+        </section>
+
+        <!-- Dynamic Spacer: Pushes the Footer Down -->
+        <div class="spacer"></div>
+
+        <footer>
+            <hr class="theme-divider">
+            <button class="btn-mgs" onclick="toggleSettings()">CLOSE</button>
+        </footer>
+    </div>
+</div>
