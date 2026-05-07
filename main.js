@@ -19,8 +19,6 @@ let currentSteamTarget = null;
  * These are moved outside createWindow to prevent memory leaks on reload
  */
 
-const { exec } = require('child_process');
-
 function registerMissionPath() {
     // 1. Target keys for both versions
     // Key A: The auto-generated one from v1.0.0
