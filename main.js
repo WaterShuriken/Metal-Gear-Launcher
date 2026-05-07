@@ -170,6 +170,8 @@ ipcMain.on('launch-mission', (event, { type, target, emu, steamExe }) => {
 
 // Listener to kill the game if requested
 ipcMain.on('abort-mission', (event, data) => {
+    console.log("[DEBUG] Received Abort Request. Data:", data);
+
     const steamExe = (data && data.steamExe) ? data.steamExe : null;
 
     if (steamExe) {

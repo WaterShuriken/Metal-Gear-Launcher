@@ -165,8 +165,6 @@ async function toggleSettings() {
     }
 }
 
-
-
 function missionStart(type, target, emu = "") {
     // 1. Check if the function is even being called
     console.log("Mission Start triggered:", { type, target, emu });
@@ -187,6 +185,7 @@ function missionStart(type, target, emu = "") {
 }
 
 let pendingCard = null;
+let pendingSteamExe = "";
 
 function missionControl(event, type, target, emu, steamExe = "") {
     const card = event.currentTarget;
@@ -195,6 +194,7 @@ function missionControl(event, type, target, emu, steamExe = "") {
         const modal = document.getElementById('abort-modal');
         if (modal) modal.style.display = 'flex';
         pendingCard = card;
+        pendingSteamExe = steamExe;
     } else {
         window.electronAPI.launchMission({ type, target, emu, steamExe });
         
@@ -204,7 +204,10 @@ function missionControl(event, type, target, emu, steamExe = "") {
 }
 
 function confirmAbort() {
-    window.electronAPI.abortMission();
+    if (window.electronAPI && window.electronAPI.abortMission) {
+        window.electronAPI.abortMission({ steamExe: pendingSteamExe });
+    }
+    
     if (pendingCard) pendingCard.classList.remove('running');
     closeAbortModal();
 }
@@ -212,6 +215,7 @@ function confirmAbort() {
 function closeAbortModal() {
     document.getElementById('abort-modal').style.display = 'none';
     pendingCard = null;
+    pendingSteamExe = steamExe;
 }
 
 let activeTime = 'all';
