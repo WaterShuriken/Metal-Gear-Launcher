@@ -43,6 +43,7 @@ function registerMissionPath() {
 
 
 function initUpdater() {
+    autoUpdater.appBackUpDir = process.cwd(); 
     autoUpdater.disableWebInstaller = true;
     autoUpdater.forceDevUpdateConfig = false;
     autoUpdater.autoInstallOnAppQuit = true;
@@ -324,6 +325,10 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
+});
+
+mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('app-version', app.getVersion());
 });
 
 autoUpdater.on('update-available', () => {

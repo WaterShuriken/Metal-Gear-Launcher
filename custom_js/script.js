@@ -314,6 +314,5 @@ window.electronAPI.onUpdateStatus((message) => {
 });
 
 window.electronAPI.onAppVersion((version) => {
-    const tag = document.querySelector('.version-tag');
-    if (tag) tag.innerText = `v${version}`;
+    document.getElementById('version-display').innerText = `v${version}`;
 });
