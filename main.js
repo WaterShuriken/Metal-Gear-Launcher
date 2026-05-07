@@ -2,6 +2,8 @@ const { shell, app, BrowserWindow, ipcMain, screen, Menu } = require('electron')
 const path = require('path');
 const { exec } = require('child_process');
 const fs = require('fs-extra');
+const fs = require('fs');
+const { autoUpdater } = require("electron-updater");
 
 let mainWindow;
 let isSwitchingMonitor = false;
@@ -14,6 +16,23 @@ let currentSteamTarget = null;
  * 1. IPC HANDLERS & LISTENERS
  * These are moved outside createWindow to prevent memory leaks on reload
  */
+function initUpdater() {
+    // Look for the key file next to the .exe
+    const keyPath = path.join(process.cwd(), 'update.key');
+
+    if (fs.existsSync(keyPath)) {
+        const token = fs.readFileSync(keyPath, 'utf8').trim();
+        
+        autoUpdater.requestHeaders = {
+            "Authorization": `token ${token}`
+        };
+
+        autoUpdater.checkForUpdatesAndNotify();
+        console.log('[SYSTEM] UPDATE KEY VERIFIED. MONITORING GITHUB...');
+    } else {
+        console.log('[SYSTEM] NO UPDATE KEY FOUND. AUTO-UPDATES DISABLED.');
+    }
+}
 
 // Get all monitors with hardware IDs
 ipcMain.handle('get-monitors', () => {
@@ -278,6 +297,7 @@ function createWindow() {
 app.whenReady().then(() => {
     createWindow();
     Menu.setApplicationMenu(null);
+    initUpdater();
 });
 
 app.on('window-all-closed', () => {

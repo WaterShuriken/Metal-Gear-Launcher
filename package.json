@@ -1,15 +1,15 @@
 {
   "name": "metal-gear-launcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A launcher for the Metal Gear Series of games",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "publish": "electron-forge publish"
   },
-  "keywords": [],
   "author": "Allison",
   "license": "ISC",
   "type": "commonjs",
@@ -22,10 +22,11 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
     "@electron-forge/plugin-fuses": "^7.11.1",
     "@electron/fuses": "^1.8.0",
-    "electron": "^41.5.0"
+    "electron": "^31.0.0"
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1",
+    "electron-updater": "^6.1.7",
     "fs-extra": "^11.3.4"
   },
   "config": {
@@ -46,20 +47,19 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {}
-        },
+        }
+      ],
+      "publishers": [
         {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
+          "name": "@electron-forge/publisher-github",
+          "config": {
+            "repository": {
+              "owner": "WaterShuriken",
+              "name": "Metal-Gear-Launcher"
+            },
+            "prerelease": false,
+            "draft": true
+          }
         }
       ],
       "plugins": [
