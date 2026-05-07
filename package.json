@@ -4,74 +4,59 @@
   "description": "A launcher for the Metal Gear Series of games",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish"
+    "start": "electron .",
+    "build": "electron-builder",
+    "publish": "electron-builder --publish always"
   },
   "author": "Allison",
   "license": "ISC",
   "type": "commonjs",
-  "devDependencies": {
-    "@electron-forge/cli": "^7.11.1",
-    "@electron-forge/maker-deb": "^7.11.1",
-    "@electron-forge/maker-rpm": "^7.11.1",
-    "@electron-forge/maker-squirrel": "^7.11.1",
-    "@electron-forge/maker-zip": "^7.11.1",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
-    "@electron-forge/plugin-fuses": "^7.11.1",
-    "@electron-forge/publisher-github": "^7.11.1",
-    "@electron/fuses": "^1.8.0",
-    "electron": "^31.0.0"
-  },
   "dependencies": {
+    "electron-log": "^5.4.3",
     "electron-squirrel-startup": "^1.0.1",
     "electron-updater": "^6.1.7",
     "fs-extra": "^11.3.4"
   },
-  "config": {
-    "forge": {
-      "packagerConfig": {
-        "icon": "img/icon",
-        "asar": true,
-        "ignore": [
-          "/emulators",
-          "/roms",
-          "/shortcuts",
-          "/.vscode",
-          "/.git",
-          "/installer_scripts",
-          "update.key",
-          "/Output"
-        ]
-      },
-      "rebuildConfig": {},
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {}
-        }
-      ],
-      "publishers": [
-        {
-          "name": "@electron-forge/publisher-github",
-          "config": {
-            "repository": {
-              "owner": "WaterShuriken",
-              "name": "Metal-Gear-Launcher"
-            },
-            "prerelease": false,
-            "draft": true
-          }
-        }
-      ],
-      "plugins": [
-        {
-          "name": "@electron-forge/plugin-auto-unpack-natives",
-          "config": {}
-        }
-      ]
-    }
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.allie.mgslauncher",
+    "productName": "metal-gear-launcher",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "publish": ["github"],
+      "icon": "img/icon.ico",
+      "target": ["nsis"]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "img/icon.ico",
+      "uninstallerIcon": "img/icon.ico"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "WaterShuriken",
+        "repo": "Metal-Gear-Launcher",
+        "private": true
+      }
+    ],
+    "files": [
+      "**/*",
+      "!emulators${/*}",
+      "!roms${/*}",
+      "!shortcuts${/*}",
+      "!.vscode${/*}",
+      "!.git${/*}",
+      "!installer_scripts${/*}",
+      "!update.key",
+      "!Output${/*}",
+      "!dist${/*}"
+    ]
   }
 }

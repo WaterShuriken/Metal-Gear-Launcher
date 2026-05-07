@@ -4,6 +4,9 @@ const { exec } = require('child_process');
 const fs = require('fs-extra');
 const { autoUpdater } = require("electron-updater");
 
+autoUpdater.logger = require("electron-log");
+autoUpdater.logger.transports.file.level = "info";
+
 let mainWindow;
 let isSwitchingMonitor = false;
 let gameProcess = null;
@@ -16,20 +19,32 @@ let currentSteamTarget = null;
  * These are moved outside createWindow to prevent memory leaks on reload
  */
 function initUpdater() {
-    // Look for the key file next to the .exe
     const keyPath = path.join(process.cwd(), 'update.key');
 
     if (fs.existsSync(keyPath)) {
         const token = fs.readFileSync(keyPath, 'utf8').trim();
         
+        // 1. Manually construct the private GitHub API URL
+        const repoOwner = "WaterShuriken";
+        const repoName = "Metal-Gear-Launcher";
+        const apiURL = `https://github.com{repoOwner}/${repoName}/releases/latest`;
+
+        // 2. Setup the updater to use a "Generic" provider but point to GitHub's API
+        // This stops the .atom fallback completely
+        autoUpdater.setFeedURL({
+            provider: "generic",
+            url: `https://githubusercontent.com{repoOwner}/${repoName}/main/` 
+        });
+
+        // 3. Inject the token for the API headers
         autoUpdater.requestHeaders = {
-            "Authorization": `token ${token}`
+            "Authorization": `token ${token}`,
+            "Accept": "application/octet-stream" // This is for downloading the actual file
         };
 
-        autoUpdater.checkForUpdatesAndNotify();
-        console.log('[SYSTEM] UPDATE KEY VERIFIED. MONITORING GITHUB...');
-    } else {
-        console.log('[SYSTEM] NO UPDATE KEY FOUND. AUTO-UPDATES DISABLED.');
+        // 4. Force a manual check
+        console.log("[SYSTEM] SATELLITE LINK ESTABLISHED. SCANNING API...");
+        autoUpdater.checkForUpdates();
     }
 }
 
@@ -301,4 +316,13 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
+});
+
+autoUpdater.on('update-available', () => {
+    console.log('[SYSTEM] NEW INTEL DETECTED.');
+    autoUpdater.downloadUpdate();
+});
+
+autoUpdater.on('error', (err) => {
+    console.error('Fuck something went wrong ' + err);
 });
