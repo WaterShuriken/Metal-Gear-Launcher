@@ -18,6 +18,32 @@ let currentSteamTarget = null;
  * 1. IPC HANDLERS & LISTENERS
  * These are moved outside createWindow to prevent memory leaks on reload
  */
+
+const { exec } = require('child_process');
+
+function registerMissionPath() {
+    // 1. Target keys for both versions
+    // Key A: The auto-generated one from v1.0.0
+    const v100Key = "Metal Gear: Allison's Collection_is1";
+    // Key B: The specific ID we used in the v1.0.1 script
+    const v101Key = "MGS-ALLISON-COLLECTION-001_is1";
+
+    const keysToDelete = [v100Key, v101Key];
+
+    keysToDelete.forEach(key => {
+        // Delete from standard 64-bit registry
+        exec(`reg delete "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${key}" /f`, (err) => {
+            if (err) {
+                // Try 32-bit fallback (WOW6432Node) if the first one fails
+                exec(`reg delete "HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${key}" /f`);
+            }
+        });
+    });
+
+    console.log('[SYSTEM] Legacy Registry cleanup initiated for v1.0.0 and v1.0.1.');
+}
+
+
 function initUpdater() {
     autoUpdater.disableWebInstaller = true;
     autoUpdater.forceDevUpdateConfig = false;
@@ -294,6 +320,7 @@ function createWindow() {
 app.whenReady().then(() => {
     createWindow();
     Menu.setApplicationMenu(null);
+    registerMissionPath();
     initUpdater();
 });
 
