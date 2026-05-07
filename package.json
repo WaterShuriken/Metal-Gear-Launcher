@@ -36,6 +36,12 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "perMachine": true, 
+      "allowElevation": true,
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Metal Gear - Allison's Collection",
       "installerIcon": "img/icon.ico",
       "uninstallerIcon": "img/icon.ico"
     },
