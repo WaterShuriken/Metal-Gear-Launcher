@@ -19,34 +19,11 @@ let currentSteamTarget = null;
  * These are moved outside createWindow to prevent memory leaks on reload
  */
 function initUpdater() {
-    const keyPath = path.join(process.cwd(), 'update.key');
-
-    if (fs.existsSync(keyPath)) {
-        const token = fs.readFileSync(keyPath, 'utf8').trim();
-        
-        // 1. Manually construct the private GitHub API URL
-        const repoOwner = "WaterShuriken";
-        const repoName = "Metal-Gear-Launcher";
-        const apiURL = `https://github.com{repoOwner}/${repoName}/releases/latest`;
-
-        // 2. Setup the updater to use a "Generic" provider but point to GitHub's API
-        // This stops the .atom fallback completely
-        autoUpdater.setFeedURL({
-            provider: "generic",
-            url: `https://githubusercontent.com{repoOwner}/${repoName}/main/` 
-        });
-
-        // 3. Inject the token for the API headers
-        autoUpdater.requestHeaders = {
-            "Authorization": `token ${token}`,
-            "Accept": "application/octet-stream" // This is for downloading the actual file
-        };
-
-        // 4. Force a manual check
-        console.log("[SYSTEM] SATELLITE LINK ESTABLISHED. SCANNING API...");
-        autoUpdater.checkForUpdates();
-    }
+    autoUpdater.checkForUpdatesAndNotify();
+    
+    console.log('[SYSTEM] PUBLIC SATELLITE LINK ACTIVE. SCANNING...');
 }
+
 
 // Get all monitors with hardware IDs
 ipcMain.handle('get-monitors', () => {
