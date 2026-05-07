@@ -19,8 +19,8 @@ let currentSteamTarget = null;
  * These are moved outside createWindow to prevent memory leaks on reload
  */
 function initUpdater() {
-    autoUpdater.checkForUpdatesAndNotify();
-    
+    autoUpdater.disableWebInstaller = true;
+    autoUpdater.checkForUpdatesAndNotify(); 
     console.log('[SYSTEM] PUBLIC SATELLITE LINK ACTIVE. SCANNING...');
 }
 
