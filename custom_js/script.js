@@ -312,3 +312,8 @@ window.electronAPI.onUpdateStatus((message) => {
         statusFooter.innerHTML = `[ ${message} ]`;
     }
 });
+
+window.electronAPI.onAppVersion((version) => {
+    const tag = document.querySelector('.version-tag');
+    if (tag) tag.innerText = `v${version}`;
+});

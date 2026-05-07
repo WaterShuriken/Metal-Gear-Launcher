@@ -21,6 +21,7 @@ let currentSteamTarget = null;
 function initUpdater() {
     autoUpdater.disableWebInstaller = true;
     autoUpdater.forceDevUpdateConfig = false;
+    autoUpdater.autoInstallOnAppQuit = true;
     autoUpdater.checkForUpdatesAndNotify(); 
     console.log('[SYSTEM] PUBLIC SATELLITE LINK ACTIVE. SCANNING...');
 }
@@ -280,6 +281,10 @@ function createWindow() {
             }, false);
         }
     });
+
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.webContents.send('app-version', app.getVersion());
+    });
 }
 
 /**
@@ -313,4 +318,6 @@ autoUpdater.on('download-progress', (progressObj) => {
 
 autoUpdater.on('update-downloaded', () => {
     mainWindow.webContents.send('update-status', 'UPDATE SECURED. RESTART TO APPLY.');
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.quitAndInstall(true, true); 
 });
