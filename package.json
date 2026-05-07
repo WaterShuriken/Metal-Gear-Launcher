@@ -42,7 +42,7 @@
           "/.git",
           "/installer_scripts",
           "update.key",
-          "Output"
+          "/Output"
         ]
       },
       "rebuildConfig": {},
