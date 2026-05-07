@@ -2,7 +2,6 @@ const { shell, app, BrowserWindow, ipcMain, screen, Menu } = require('electron')
 const path = require('path');
 const { exec } = require('child_process');
 const fs = require('fs-extra');
-const fs = require('fs');
 const { autoUpdater } = require("electron-updater");
 
 let mainWindow;
