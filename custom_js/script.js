@@ -298,3 +298,17 @@ window.electronAPI.onMissionEnd(() => {
         c.classList.remove('running');
     });
 });
+
+window.electronAPI.onUpdateProgress((percent) => {
+    const statusFooter = document.querySelector('.status-text');
+    if (statusFooter) {
+        statusFooter.innerHTML = `[ DOWNLOADING INTEL: ${percent}% ]`;
+    }
+});
+
+window.electronAPI.onUpdateStatus((message) => {
+    const statusFooter = document.querySelector('.status-text');
+    if (statusFooter) {
+        statusFooter.innerHTML = `[ ${message} ]`;
+    }
+});

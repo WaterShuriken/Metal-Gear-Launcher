@@ -20,6 +20,7 @@ let currentSteamTarget = null;
  */
 function initUpdater() {
     autoUpdater.disableWebInstaller = true;
+    autoUpdater.forceDevUpdateConfig = false;
     autoUpdater.checkForUpdatesAndNotify(); 
     console.log('[SYSTEM] PUBLIC SATELLITE LINK ACTIVE. SCANNING...');
 }
@@ -302,4 +303,14 @@ autoUpdater.on('update-available', () => {
 
 autoUpdater.on('error', (err) => {
     console.error('Fuck something went wrong ' + err);
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+    const percent = Math.round(progressObj.percent);
+    mainWindow.webContents.send('update-progress', percent);
+    console.log(`[SYSTEM] DOWNLOAD: ${percent}%`);
+});
+
+autoUpdater.on('update-downloaded', () => {
+    mainWindow.webContents.send('update-status', 'UPDATE SECURED. RESTART TO APPLY.');
 });
