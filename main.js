@@ -42,13 +42,21 @@ function registerMissionPath() {
 }
 
 
-function initUpdater() {
-    autoUpdater.appBackUpDir = process.cwd(); 
-    autoUpdater.disableWebInstaller = true;
-    autoUpdater.forceDevUpdateConfig = false;
-    autoUpdater.autoInstallOnAppQuit = true;
-    autoUpdater.checkForUpdatesAndNotify(); 
-    console.log('[SYSTEM] PUBLIC SATELLITE LINK ACTIVE. SCANNING...');
+function initUpdater(windowRef) {
+    function initUpdater(windowRef) {
+        // Pass the window reference in so we know it exists
+        autoUpdater.on('update-available', () => {
+            if (windowRef && windowRef.webContents) {
+                windowRef.webContents.send('update-status', 'NEW INTEL DETECTED');
+            }
+        });
+        autoUpdater.appBackUpDir = process.cwd(); 
+        autoUpdater.disableWebInstaller = true;
+        autoUpdater.forceDevUpdateConfig = false;
+        autoUpdater.autoInstallOnAppQuit = true;
+        autoUpdater.checkForUpdatesAndNotify(); 
+        console.log('[SYSTEM] PUBLIC SATELLITE LINK ACTIVE. SCANNING...');
+    }
 }
 
 
@@ -310,6 +318,11 @@ function createWindow() {
     mainWindow.once('ready-to-show', () => {
         mainWindow.webContents.send('app-version', app.getVersion());
     });
+
+    mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow.webContents.send('app-version', app.getVersion());
+    });
+
 }
 
 /**
@@ -327,9 +340,6 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
 
-mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.webContents.send('app-version', app.getVersion());
-});
 
 autoUpdater.on('update-available', () => {
     console.log('[SYSTEM] NEW INTEL DETECTED.');
