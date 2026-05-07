@@ -39,7 +39,10 @@
           "/roms",
           "/shortcuts",
           "/.vscode",
-          "/.git"
+          "/.git",
+          "/installer_scripts",
+          "update.key",
+          "Output"
         ]
       },
       "rebuildConfig": {},
