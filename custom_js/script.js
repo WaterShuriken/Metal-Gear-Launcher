@@ -313,3 +313,22 @@ window.electronAPI.onUpdateFound(() => {
         versionDisplay.innerText = "UPDATING...";
     }
 });
+
+window.electronAPI.onUpdateProgress((percent) => {
+    const overlay = document.getElementById('update-overlay');
+    const bar = document.getElementById('update-bar');
+    const percentText = document.getElementById('update-percent');
+
+    overlay.classList.remove('hidden');
+    bar.style.width = `${percent}%`;
+    percentText.innerText = `${percent}%`;
+});
+
+window.electronAPI.onUpdateStatus((message) => {
+    if (message === "Update done bestie! itll restart soon") {
+        const header = document.querySelector('.update-header');
+        header.innerText = "Update Complete";
+        header.style.color = "#fff";
+        // main.js handles the auto-quitAndInstall()
+    }
+});

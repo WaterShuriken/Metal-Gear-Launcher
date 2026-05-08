@@ -18,6 +18,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     abortMission: (data) => ipcRenderer.send('abort-mission', data),
     onAppVersion: (callback) => ipcRenderer.on('app-version', (event, version) => callback(version)),
     onUpdateFound: (callback) => ipcRenderer.on('update-found', (event) => callback()),
+    onUpdateProgress: (callback) => ipcRenderer.on('update-progress', (event, percent) => callback(percent)),
+    onUpdateStatus: (callback) => ipcRenderer.on('update-status', (event, message) => callback(message)),
 
     // Requests (Two-way)
     getMonitors: () => ipcRenderer.invoke('get-monitors'),
