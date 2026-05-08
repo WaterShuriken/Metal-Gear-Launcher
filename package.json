@@ -1,6 +1,6 @@
 {
   "name": "metal-gear-launcher",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A launcher for the Metal Gear Series of games",
   "main": "main.js",
   "scripts": {
@@ -13,7 +13,6 @@
   "type": "commonjs",
   "dependencies": {
     "electron-log": "^5.4.3",
-    "electron-squirrel-startup": "^1.0.1",
     "electron-updater": "^6.1.7",
     "fs-extra": "^11.3.4"
   },
@@ -30,12 +29,14 @@
     "win": {
       "icon": "img/icon.ico",
       "artifactName": "Metal-Gear-Allisons-Collection-Setup-${version}.${ext}",
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "perMachine": true, 
+      "perMachine": true,
       "allowElevation": true,
       "deleteAppDataOnUninstall": false,
       "createDesktopShortcut": "always",
@@ -45,7 +46,7 @@
       "shortcutName": "Metal Gear - Allison's Collection",
       "installerIcon": "img/icon.ico",
       "uninstallerIcon": "img/icon.ico",
-       "include": "build/installer.nsh"
+      "include": "build/installer.nsh"
     },
     "publish": [
       {

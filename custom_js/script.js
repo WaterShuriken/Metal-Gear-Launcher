@@ -134,6 +134,7 @@ async function initApp() {
 
 async function toggleSettings() {
     let sidebar = document.getElementById('settings-sidebar');
+    let overlay = document.getElementById('settings-overlay');
     
     if (!sidebar) {
         const isSubPage = window.location.pathname.includes('/timeline/');
@@ -144,24 +145,40 @@ async function toggleSettings() {
             if (!response.ok) throw new Error('Settings file not found');
             const html = await response.text();
             
+            // Create Sidebar
             sidebar = document.createElement('div');
             sidebar.id = 'settings-sidebar';
             sidebar.innerHTML = html;
             document.body.appendChild(sidebar);
+
+            // Create Click-Outside Overlay
+            overlay = document.createElement('div');
+            overlay.id = 'settings-overlay';
+            overlay.onclick = toggleSettings; // Clicking overlay closes settings
+            document.body.appendChild(overlay);
+
+            // Force a tiny timeout so the CSS 'right' transition triggers correctly
+            setTimeout(() => {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            }, 10);
+
         } catch (err) {
             console.error("Failed to load settings:", err);
             return;
         }
+    } else {
+        sidebar.classList.toggle('open');
+        overlay = document.getElementById('settings-overlay');
+        overlay.classList.toggle('active');
     }
-
-    sidebar.classList.toggle('open');
 
     if (sidebar.classList.contains('open')) {
         const fsState = getPref('fullscreen-pref', false);
-        syncFullscreenUI(fsState);
-        updateEffectsBtnUI();
-        loadMonitors();
-        applyTheme();
+        if (typeof syncFullscreenUI === 'function') syncFullscreenUI(fsState);
+        if (typeof updateEffectsBtnUI === 'function') updateEffectsBtnUI();
+        if (typeof loadMonitors === 'function') loadMonitors();
+        if (typeof applyTheme === 'function') applyTheme();
     }
 }
 
