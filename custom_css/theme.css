@@ -20,6 +20,16 @@
     z-index: 100;
 }
 
+.update-pulse {
+    animation: pulse-red 1.5s infinite;
+}
+
+@keyframes pulse-red {
+    0% { color: #ff0000; opacity: 1; }
+    50% { color: #ffffff; opacity: 0.5; }
+    100% { color: #ff0000; opacity: 1; }
+}
+
 #hub-continue-btn.has-history {
     display: block !important;
 }

@@ -43,20 +43,18 @@ function registerMissionPath() {
 
 
 function initUpdater(windowRef) {
-    function initUpdater(windowRef) {
-        // Pass the window reference in so we know it exists
-        autoUpdater.on('update-available', () => {
-            if (windowRef && windowRef.webContents) {
-                windowRef.webContents.send('update-status', 'NEW INTEL DETECTED');
-            }
-        });
-        autoUpdater.appBackUpDir = process.cwd(); 
-        autoUpdater.disableWebInstaller = true;
-        autoUpdater.forceDevUpdateConfig = false;
-        autoUpdater.autoInstallOnAppQuit = true;
-        autoUpdater.checkForUpdatesAndNotify(); 
-        console.log('[SYSTEM] PUBLIC SATELLITE LINK ACTIVE. SCANNING...');
-    }
+    // Pass the window reference in so we know it exists
+    autoUpdater.on('update-available', () => {
+        if (windowRef && windowRef.webContents) {
+            windowRef.webContents.send('update-status', 'NEW INTEL DETECTED');
+        }
+    });
+    autoUpdater.appBackUpDir = path.dirname(process.execPath);
+    autoUpdater.disableWebInstaller = true;
+    autoUpdater.forceDevUpdateConfig = false;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.checkForUpdatesAndNotify(); 
+    console.log('[SYSTEM] PUBLIC SATELLITE LINK ACTIVE. SCANNING...');
 }
 
 
@@ -184,7 +182,7 @@ ipcMain.on('launch-mission', (event, { type, target, emu, steamExe }) => {
         return; 
     }
 
-    const rootDir = process.cwd(); 
+    const rootDir = "../" + process.cwd(); 
     const emuType = emu.split('/')[0];
     const emuParts = emu.split(' ');
     const emuExeSubPath = emuParts[0]; 

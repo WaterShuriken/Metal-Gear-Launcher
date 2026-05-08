@@ -1,6 +1,6 @@
 {
   "name": "metal-gear-launcher",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A launcher for the Metal Gear Series of games",
   "main": "main.js",
   "scripts": {
@@ -22,15 +22,14 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.allie.mgslauncher",
-    "productName": "metal-gear-launcher",
+    "appId": "com.allie.mglauncher",
+    "productName": "Metal Gear - Allison's Collection",
     "directories": {
       "output": "dist"
     },
     "win": {
-      "publish": ["github"],
       "icon": "img/icon.ico",
-      "artifactName": "${name}.Setup.${version}.${ext}",
+      "artifactName": "Metal-Gear-Allisons-Collection-Setup-${version}.${ext}",
       "target": ["nsis"]
     },
     "nsis": {
@@ -41,9 +40,12 @@
       "deleteAppDataOnUninstall": false,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
+      "differentialPackage": false,
+      "uninstallDisplayName": "Metal Gear - Allison's Collection",
       "shortcutName": "Metal Gear - Allison's Collection",
       "installerIcon": "img/icon.ico",
-      "uninstallerIcon": "img/icon.ico"
+      "uninstallerIcon": "img/icon.ico",
+       "include": "build/installer.nsh"
     },
     "publish": [
       {

@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     launch: (command) => ipcRenderer.send('launch-app', command),
     launchMission: (data) => ipcRenderer.send('launch-mission', data),
     abortMission: (data) => ipcRenderer.send('abort-mission', data),
+    onAppVersion: (callback) => ipcRenderer.on('app-version', (event, version) => callback(version)),
+    onUpdateFound: (callback) => ipcRenderer.on('update-found', (event) => callback()),
 
     // Requests (Two-way)
     getMonitors: () => ipcRenderer.invoke('get-monitors'),

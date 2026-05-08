@@ -299,20 +299,17 @@ window.electronAPI.onMissionEnd(() => {
     });
 });
 
-window.electronAPI.onUpdateProgress((percent) => {
-    const statusFooter = document.querySelector('.status-text');
-    if (statusFooter) {
-        statusFooter.innerHTML = `[ DOWNLOADING INTEL: ${percent}% ]`;
-    }
-});
-
-window.electronAPI.onUpdateStatus((message) => {
-    const statusFooter = document.querySelector('.status-text');
-    if (statusFooter) {
-        statusFooter.innerHTML = `[ ${message} ]`;
-    }
-});
-
 window.electronAPI.onAppVersion((version) => {
-    document.getElementById('version-display').innerText = `v${version}`;
+    const versionDisplay = document.getElementById('version-display');
+    if (versionDisplay) {
+        versionDisplay.innerText = `v${version}`;
+    }
+});
+
+window.electronAPI.onUpdateFound(() => {
+    const versionDisplay = document.getElementById('version-display');
+    if (versionDisplay) {
+        versionDisplay.classList.add('update-pulse');
+        versionDisplay.innerText = "UPDATING...";
+    }
 });
