@@ -156,6 +156,7 @@ async function toggleSettings() {
             overlay.id = 'settings-overlay';
             overlay.onclick = toggleSettings; // Clicking overlay closes settings
             document.body.appendChild(overlay);
+            loadMonitors();
 
             // Force a tiny timeout so the CSS 'right' transition triggers correctly
             setTimeout(() => {
@@ -182,23 +183,59 @@ async function toggleSettings() {
     }
 }
 
-function missionStart(type, target, emu = "") {
-    // 1. Check if the function is even being called
-    console.log("Mission Start triggered:", { type, target, emu });
+let activeIntelCard = null;
 
-    // 2. Check if the Electron Bridge is alive
-    if (!window.electronAPI) {
-        console.error("CRITICAL ERROR: window.electronAPI is missing. Preload failed to load.");
-        return;
+function openIntelMenu(e, cardElement) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    activeIntelCard = cardElement; // Store the card
+    let menu = document.getElementById('intel-menu');
+    
+    if (!menu) {
+        menu = document.createElement('div');
+        menu.id = 'intel-menu';
+        document.body.appendChild(menu);
     }
 
-    if (!window.electronAPI.launchMission) {
-        console.error("CRITICAL ERROR: launchMission is not defined in the API.");
-        return;
-    }
+    // Capture the arguments from the card's onclick to pass them to our launcher
+    // We'll use the datasets if you added them, or just parse the onclick
+    menu.innerHTML = `
+        <div class="intel-menu-item" onclick="launchFromIntelMenu()">[ LAUNCH MISSION ]</div>
+        <div class="intel-menu-divider"></div>
+        <div class="intel-menu-item" onclick="closeIntelMenu()">VIEW INTEL FILES</div>
+        <div class="intel-menu-item" onclick="closeIntelMenu()">MANAGE SAVES</div>
+        <div class="intel-menu-divider"></div>
+        <div class="intel-menu-item" style="color: #ff4444;" onclick="closeIntelMenu()">CANCEL</div>
+    `;
 
-    // 3. Send the data to the Main Process
-    window.electronAPI.launchMission({ type, target, emu });
+    menu.style.display = 'block';
+    menu.style.left = `${e.clientX}px`;
+    menu.style.top = `${e.clientY}px`;
+
+    setTimeout(() => {
+        document.addEventListener('click', closeIntelMenu, { once: true });
+    }, 50);
+}
+
+function launchFromIntelMenu() {
+    if (activeIntelCard) {
+        // TACTICAL FIX: Create a mock event so missionControl can find the card
+        const mockEvent = {
+            currentTarget: activeIntelCard,
+            preventDefault: () => {}
+        };
+
+        // We trigger the card's native onclick but pass our mock event
+        activeIntelCard.onclick(mockEvent); 
+        closeIntelMenu();
+    }
+}
+
+function closeIntelMenu() {
+    const menu = document.getElementById('intel-menu');
+    if (menu) menu.style.display = 'none';
+    activeIntelCard = null;
 }
 
 let pendingCard = null;

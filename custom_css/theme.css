@@ -280,6 +280,7 @@
     opacity: 0;
     transition: 0.3s;
     pointer-events: none;
+    z-index: 10; /* Below the ... trigger but above the image */
 }
 
 .game-card:hover .status-overlay { opacity: 1; }
@@ -307,6 +308,74 @@
 .game-card.running {
     border-color: #fff !important;
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+.intel-trigger {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 22px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid var(--theme-accent);
+    color: var(--theme-accent);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 4px; /* Center dots vertically */
+    cursor: pointer;
+    z-index: 30; /* Top layer */
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.game-card:hover .intel-trigger {
+    opacity: 1;
+}
+
+.intel-trigger:hover {
+    background: var(--theme-accent);
+    color: #000;
+    box-shadow: 0 0 10px var(--theme-accent);
+}
+
+/* Ensure the image is the relative parent for positioning */
+.game-card img {
+    position: relative;
+    z-index: 1;
+}
+
+/* The Intel Context Menu */
+#intel-menu {
+    position: fixed;
+    z-index: 20000;
+    background: rgba(5, 10, 5, 0.98);
+    border: 1px solid var(--theme-accent);
+    width: 180px;
+    display: none;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+.intel-menu-item {
+    padding: 10px 15px;
+    color: var(--theme-accent);
+    font-size: 0.75rem;
+    font-family: monospace;
+    cursor: pointer;
+    transition: 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.intel-menu-item:hover {
+    background: var(--theme-accent);
+    color: #000;
+}
+
+.intel-menu-divider {
+    height: 1px;
+    background: var(--theme-accent);
+    opacity: 0.3;
 }
 
 .order-nav {
