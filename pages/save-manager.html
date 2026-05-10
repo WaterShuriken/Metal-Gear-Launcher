@@ -1,0 +1,30 @@
+<div class="save-manager-container text-center">
+    <header>
+        <h1 class="mb-2">[ SAVE DATA MANAGEMENT ]</h1>
+        <p id="active-game-label" class="opacity-50 small mb-4">MISSION: ---</p>
+    </header>
+    
+    <div class="save-zones">
+        <!-- Left: Save Profiles (New Playthroughs) -->
+        <div class="save-column">
+            <p class="section-label text-start">[ SAVE PROFILES ]</p>
+            <div id="profile-list" class="list-container">
+                <!-- Dynamically injected buttons -->
+            </div>
+            <button class="btn-mgs w-100 mt-3" onclick="createNewProfile()">+ NEW PROFILE</button>
+        </div>
+        
+        <!-- Right: Automated Backups -->
+        <div class="save-column">
+            <p class="section-label text-start">[ SATELLITE BACKUPS ]</p>
+            <div id="backup-list-manager" class="list-container">
+                <!-- Dynamically injected backups -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <hr class="theme-divider">
+        <button class="btn-mgs w-50" onclick="closeSaveManager()">BACK TO HUB</button>
+    </footer>
+</div>

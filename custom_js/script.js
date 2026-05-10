@@ -1,3 +1,29 @@
+// Enums
+class emuPaths {
+    static PCSX2 = 'pcsx2/pcsx2.exe';
+    static NES = 'retroarch/retroarch.exe -f -L cores/nestopia_libretro.dll';
+    static DUCKSTATION = 'duckstation/duckstation-qt.exe -batch';
+    static GBC = 'retroarch/retroarch.exe -f -L cores/gambatte_libretro.dll';
+    static XENIA = 'xenia/xenia.exe --fullscreen';
+    static PPSSPP = 'ppsspp/ppsspp.exe --fullscreen --escape-exit';
+    static RPCS3 = 'rpcs3/rpcs3.exe --fullscreen --no-gui';
+}
+
+class romPaths {
+    static MG = 'Metal Gear Solid 3 - Subsistence Disc 2.iso';
+    static SR = 'Snakes Revenge (USA).nes';
+    static MG2 = 'Metal Gear Solid 3 - Subsistence Disc 2.iso';
+    static MGS = 'Metal Gear Solid.m3u';
+    static GB = 'Metal Gear Solid - Ghost Babel.gbc';
+    static MGS2 = 'MGS HD/MGS2.xex';
+    static MGS3 = 'MGS HD/MGS3.xex';
+    static ACID = 'Metal Gear Ac!d.iso';
+    static ACID2 = 'Metal Gear Ac!d^2.iso';
+    static PO = 'Metal Gear Solid - Portable Ops.iso';
+    static MGS4 = 'Metal Gear Solid 4 - Guns of the Patriots (USA) (En,Fr,De,Es,It) (v02.00).dec.iso';
+    static PW = 'MGS PW/default.xex';
+}
+
 // --- 0. IMMEDIATE THEME APPLY (PREVENTS FLICKER) ---
 (function() {
     const savedTheme = localStorage.getItem('mgs-theme') || 'retro';
@@ -186,25 +212,51 @@ async function toggleSettings() {
 let activeIntelCard = null;
 
 function openIntelMenu(e, cardElement) {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    activeIntelCard = cardElement;
 
-    activeIntelCard = cardElement; // Store the card
-    let menu = document.getElementById('intel-menu');
+    // 1. Get the raw onclick string (e.g., "missionControl(event, 'emu', romPaths.MGS3, ...)")
+    const clickAttr = cardElement.getAttribute('onclick');
     
+    // 2. Identify the ROM Key by checking which Enum value is inside the string
+    let detectedKey = "UNKNOWN_MISSION";
+    for (const key in romPaths) {
+        if (clickAttr.includes(`romPaths.${key}`)) {
+            detectedKey = key; // Found it (e.g., "MGS3")
+            break;
+        }
+    }
+
+    // 3. Identify the Emulator
+    let detectedEmu = "";
+    for (const key in emuPaths) {
+        if (clickAttr.includes(`emuPaths.${key}`)) {
+            detectedEmu = emuPaths[key];
+            break;
+        }
+    }
+
+    // 4. Clean Display Name (Use the visible span)
+    const titleElement = cardElement.querySelector('.game-title');
+    const displayName = titleElement ? titleElement.innerText : detectedKey;
+
+    let menu = document.getElementById('intel-menu');
     if (!menu) {
         menu = document.createElement('div');
         menu.id = 'intel-menu';
         document.body.appendChild(menu);
     }
 
-    // Capture the arguments from the card's onclick to pass them to our launcher
-    // We'll use the datasets if you added them, or just parse the onclick
+    const isEmu = clickAttr.includes("'emu'");
+    const saveButton = isEmu 
+        ? `<div class="intel-menu-item" onclick="openSaveManager(event, '${detectedKey}', '${detectedEmu}', '${displayName}')">[ MANAGE SAVES ]</div>` 
+        : '';
+
     menu.innerHTML = `
         <div class="intel-menu-item" onclick="launchFromIntelMenu()">[ LAUNCH MISSION ]</div>
         <div class="intel-menu-divider"></div>
+        ${saveButton}
         <div class="intel-menu-item" onclick="closeIntelMenu()">VIEW INTEL FILES</div>
-        <div class="intel-menu-item" onclick="closeIntelMenu()">MANAGE SAVES</div>
         <div class="intel-menu-divider"></div>
         <div class="intel-menu-item" style="color: #ff4444;" onclick="closeIntelMenu()">CANCEL</div>
     `;
@@ -213,21 +265,13 @@ function openIntelMenu(e, cardElement) {
     menu.style.left = `${e.clientX}px`;
     menu.style.top = `${e.clientY}px`;
 
-    setTimeout(() => {
-        document.addEventListener('click', closeIntelMenu, { once: true });
-    }, 50);
+    setTimeout(() => document.addEventListener('click', closeIntelMenu, { once: true }), 50);
 }
 
 function launchFromIntelMenu() {
     if (activeIntelCard) {
-        // TACTICAL FIX: Create a mock event so missionControl can find the card
-        const mockEvent = {
-            currentTarget: activeIntelCard,
-            preventDefault: () => {}
-        };
-
-        // We trigger the card's native onclick but pass our mock event
-        activeIntelCard.onclick(mockEvent); 
+        // Trigger missionControl manually via the stored card's native click logic
+        activeIntelCard.click(); 
         closeIntelMenu();
     }
 }
@@ -235,7 +279,83 @@ function launchFromIntelMenu() {
 function closeIntelMenu() {
     const menu = document.getElementById('intel-menu');
     if (menu) menu.style.display = 'none';
-    activeIntelCard = null;
+    // activeIntelCard is NOT cleared here to allow missionControl to finish
+}
+
+async function openSaveManager(e, romKey, emuPath, displayName) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    closeIntelMenu(); 
+
+    currentTargetGame = romKey; 
+    currentTargetEmu = emuPath.split('/')[0]; // e.g., "pcsx2"
+
+    let overlay = document.getElementById('save-manager-overlay');
+    
+    if (!overlay) {
+        try {
+            const managerPath = '../../pages/save-manager.html';
+            const response = await fetch(managerPath);
+            const html = await response.text();
+            
+            overlay = document.createElement('div');
+            overlay.id = 'save-manager-overlay';
+            // Start it completely hidden
+            overlay.style.display = 'none';
+            overlay.innerHTML = `<div id="save-manager-modal">${html}</div>`;
+            document.body.appendChild(overlay);
+
+            // Close when clicking the dark area, but NOT the modal box
+            overlay.onclick = (event) => {
+                if (event.target.id === 'save-manager-overlay') {
+                    closeSaveManager();
+                }
+            };
+        } catch (err) {
+            console.error("Fetch failed:", err);
+            return;
+        }
+    }
+
+    overlay.style.display = 'flex';
+
+    setTimeout(() => {
+        overlay.classList.add('active');
+        
+        // Update labels
+        const label = document.getElementById('active-game-label');
+        if (label) label.innerText = `MISSION: ${displayName.toUpperCase()}`;
+        if (typeof applyTheme === 'function') applyTheme();
+    }, 10);
+}
+
+function closeSaveManager() {
+    const overlay = document.getElementById('save-manager-overlay');
+    if (overlay) {
+        // 🟢 Remove the class to start the CSS fade-out
+        overlay.classList.remove('active');
+
+        // 🟢 Wait for CSS transition (0.3s) then hide the display entirely
+        setTimeout(() => {
+            // Check if it's still closed (prevents flickering if opened mid-close)
+            if (!overlay.classList.contains('active')) {
+                overlay.style.display = 'none';
+            }
+        }, 300);
+    }
+}
+
+async function createNewProfile() {
+    const profileName = prompt("ENTER PROFILE CODENAME (e.g., 'BIG BOSS RUN'):");
+    if (!profileName) return;
+
+    const safeName = profileName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    // Send to Main to create the folder
+    await window.electronAPI.createSaveProfile({ 
+        emu: currentTargetEmu, 
+        game: currentTargetGame, 
+        profile: safeName 
+    });
+    refreshProfileList();
 }
 
 let pendingCard = null;

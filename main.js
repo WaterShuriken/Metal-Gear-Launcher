@@ -83,7 +83,7 @@ ipcMain.on('apply-initial-fullscreen', (event, shouldBeFull) => {
 
 // Helper to handle the backup logic
 async function manageBackups(emuType, targetName) {
-    const rootDir = process.cwd();
+    const rootDir = path.join(process.cwd(), '..');
     // Use targetName (the ROM name) to keep backups separate for each game
     const gameId = targetName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);

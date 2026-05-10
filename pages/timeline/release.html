@@ -48,7 +48,7 @@
 
         <div class="game-grid">
             <!-- METAL GEAR -->
-            <div class="game-card" data-category="canon" data-retro="true" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'Metal Gear Solid 3 - Subsistence Disc 2.iso', 'pcsx2/pcsx2.exe')">
+            <div class="game-card" data-category="canon" data-retro="true" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.MG, emuPaths.PCSX2)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-canon">CANON</div>
@@ -57,7 +57,7 @@
             </div>
 
             <!-- SNAKE'S REVENGE -->
-            <div class="game-card" data-category="parallel" data-retro="true" data-desc="Parallel Canon - Uses established storyline but spins off contradictorily" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'Snakes Revenge (USA).nes', 'retroarch/retroarch.exe -f -L cores/nestopia_libretro.dll')">
+            <div class="game-card" data-category="parallel" data-retro="true" data-desc="Parallel Canon - Uses established storyline but spins off contradictorily" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.SR, emuPaths.NES)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-parallel">PARALLEL</div>
@@ -66,7 +66,7 @@
             </div>
 
             <!-- METAL GEAR 2 -->
-            <div class="game-card" data-category="canon" data-retro="true" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'Metal Gear Solid 3 - Subsistence Disc 2.iso', 'pcsx2/pcsx2.exe')">
+            <div class="game-card" data-category="canon" data-retro="true" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.MG2, emuPaths.PCSX2)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-canon">CANON</div>
@@ -75,7 +75,7 @@
             </div>
 
             <!-- METAL GEAR SOLID -->
-            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'Metal Gear Solid.m3u', 'duckstation/duckstation-qt.exe -batch')">
+            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.MGS, emuPaths.DUCKSTATION)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-canon">CANON</div>
@@ -84,7 +84,7 @@
             </div>
 
             <!-- GHOST BABEL -->
-            <div class="game-card" data-category="ignored" data-retro="true" data-desc="Ignored Canon - No direct contradictions" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'Metal Gear Solid - Ghost Babel.gbc', 'retroarch/retroarch.exe -f -L cores/gambatte_libretro.dll')">
+            <div class="game-card" data-category="ignored" data-retro="true" data-desc="Ignored Canon - No direct contradictions" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.GB, emuPaths.GBC)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-ignored">IGNORED</div>
@@ -93,7 +93,7 @@
             </div>
 
             <!-- SONS OF LIBERTY -->
-            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'MGS HD/MGS2.xex', 'xenia/xenia.exe --fullscreen')">
+            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.MGS2, emuPaths.XENIA)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-canon">CANON</div>
@@ -102,7 +102,7 @@
             </div>
 
             <!-- SNAKE EATER -->
-            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'MGS HD/MGS3.xex', 'xenia/xenia.exe --fullscreen')">
+            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.MGS3, emuPaths.XENIA)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-canon">CANON</div>
@@ -111,7 +111,7 @@
             </div>
 
             <!-- AC!D 1 -->
-            <div class="game-card" data-category="alternate" data-retro="false" data-desc="Alternate Canon - Completely different universe" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'Metal Gear Ac!d.iso', 'ppsspp/ppsspp.exe --fullscreen --escape-exit')">
+            <div class="game-card" data-category="alternate" data-retro="false" data-desc="Alternate Canon - Completely different universe" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.ACID, emuPaths.PPSSPP)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-alternate">ALTERNATE</div>
@@ -120,7 +120,7 @@
             </div>
 
             <!-- AC!D 2 -->
-            <div class="game-card" data-category="alternate" data-retro="false" data-desc="Alternate Canon - Completely different universe" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'Metal Gear Ac!d^2.iso', 'ppsspp/ppsspp.exe --fullscreen --escape-exit')">
+            <div class="game-card" data-category="alternate" data-retro="false" data-desc="Alternate Canon - Completely different universe" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.ACID2, emuPaths.PPSSPP)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-alternate">ALTERNATE</div>
@@ -129,7 +129,7 @@
             </div>
 
             <!-- PORTABLE OPS -->
-            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'Metal Gear Solid - Portable Ops.iso', 'ppsspp/ppsspp.exe --fullscreen --escape-exit')">
+            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.PO, emuPaths.PPSSPP)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-canon">CANON</div>
@@ -138,7 +138,7 @@
             </div>
 
             <!-- GUNS OF THE PATRIOTS -->
-            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'Metal Gear Solid 4 - Guns of the Patriots (USA) (En,Fr,De,Es,It) (v02.00).dec.iso', 'rpcs3/rpcs3.exe --fullscreen --no-gui')">
+            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.MGS4, emuPaths.RPCS3)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-canon">CANON</div>
@@ -147,7 +147,7 @@
             </div>
 
             <!-- PEACE WALKER -->
-            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', 'MGS PW/default.xex', 'xenia/xenia.exe --fullscreen')">
+            <div class="game-card" data-category="canon" data-retro="false" data-desc="Canon - The established storyline" oncontextmenu="openIntelMenu(event, this)" onclick="missionControl(event, 'emu', romPaths.PW, emuPaths.XENIA)">
                 <div class="intel-trigger" onclick="openIntelMenu(event, this.parentElement)">...</div>
                 <div class="status-overlay"><div class="play-icon"></div><div class="pause-icon"></div></div>
                 <div class="canon-tag tag-canon">CANON</div>
