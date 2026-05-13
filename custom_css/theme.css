@@ -2,6 +2,190 @@
    1. SHARED STYLES (Applies to ALL themes)
    ============================================================ */
 
+/* Smaller buttons inside the save manager */
+.btn-sm-mgs {
+    padding: 10px 14px !important;
+    font-size: 0.7rem !important;
+    margin-bottom: 0 !important;
+}
+ 
+/* Compact profile row */
+.profile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--theme-accent);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 2px;
+}
+ 
+.profile-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-left-color: var(--theme-accent);
+}
+ 
+/* Active / selected profile */
+.profile-row--active {
+    border-left-color: var(--theme-accent) !important;
+    background: rgba(var(--theme-accent-rgb, 0, 255, 65), 0.08) !important;
+}
+ 
+/* The blinking pip that marks the active profile */
+.profile-active-pip {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--theme-accent);
+    box-shadow: 0 0 6px var(--theme-accent);
+    margin-right: 6px;
+    flex-shrink: 0;
+    animation: pip-pulse 2s ease-in-out infinite;
+}
+ 
+@keyframes pip-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+ 
+.profile-row__name {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+ 
+/* Rename / delete icon buttons */
+.profile-row__actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+ 
+.profile-row:hover .profile-row__actions {
+    opacity: 1;
+}
+ 
+.profile-action-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--theme-accent);
+    width: 22px;
+    height: 22px;
+    font-size: 0.7rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+ 
+.profile-action-btn:hover {
+    background: var(--theme-accent);
+    color: #000;
+    border-color: var(--theme-accent);
+}
+ 
+.profile-action-btn--danger:hover {
+    background: #ff4444;
+    color: #fff;
+    border-color: #ff4444;
+}
+ 
+/* Empty state */
+.profile-empty {
+    opacity: 0.4;
+    text-align: center;
+    padding: 20px 10px;
+    font-size: 0.7rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+ 
+/* Compact backup items */
+.backup-item {
+    padding: 8px 10px;
+    margin-bottom: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.65rem;
+    color: var(--theme-accent);
+    opacity: 0.7;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.backup-item--current {
+    border-left-color: var(--theme-accent);
+    background: rgba(var(--theme-accent-rgb, 0, 255, 65), 0.08);
+    opacity: 1;
+}
+
+.backup-item__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.backup-item__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.backup-item__meta {
+    opacity: 0.6;
+    font-size: 0.55rem;
+    letter-spacing: 1px;
+}
+
+.backup-item__badge {
+    flex-shrink: 0;
+    font-size: 0.55rem;
+    border: 1px solid var(--theme-accent);
+    padding: 3px 6px;
+}
+
+.backup-load-btn {
+    width: auto;
+    min-width: 48px;
+    padding: 0 8px;
+}
+ 
+/* Inline error text inside profile modals */
+.profile-modal-error {
+    color: #ff4444;
+    font-size: 0.65rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+    min-height: 1em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
 #save-manager-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -23,28 +207,104 @@
 #save-manager-modal {
     width: 800px;
     max-width: 90vw;
-    background: #050a05;
+    height: min(82vh, 760px);
+    max-height: min(82vh, 760px);
+    overflow: hidden;
+    background: rgba(5, 10, 5, 0.98);
     border: 2px solid var(--theme-accent);
     padding: 30px;
-    box-shadow: 0 0 40px rgba(0, 255, 0, 0.15);
+    box-shadow: 0 0 40px rgba(var(--theme-accent-rgb, 0, 255, 65), 0.18);
 }
 
-.save-zones { display: flex; gap: 25px; margin-top: 20px; }
+.save-manager-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.save-zones {
+    display: flex;
+    gap: 25px;
+    margin-top: 20px;
+    flex: 1;
+    min-height: 0;
+}
 
 .save-column { 
     flex: 1; 
-    min-height: 350px; 
+    min-height: 0;
     border: 1px solid rgba(255, 255, 255, 0.1); 
     padding: 15px;
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .list-container {
     flex-grow: 1;
+    min-height: 0;
+    max-height: 100%;
     overflow-y: auto;
     background: rgba(255, 255, 255, 0.02);
     border: 1px inset rgba(255, 255, 255, 0.1);
     padding: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--theme-accent) rgba(255, 255, 255, 0.06);
+}
+
+.list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.list-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.list-container::-webkit-scrollbar-thumb {
+    background: var(--theme-accent);
+    border-radius: 2px;
+}
+
+.mgs-modal-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; border: 1px solid var(--theme-accent);
+}
+
+.mgs-modal-content {
+    background: rgba(0, 0, 0, 0.96);
+    padding: 20px;
+    border: 2px solid var(--theme-accent);
+    box-shadow: 0 0 15px rgba(var(--theme-accent-rgb, 0, 255, 65), 0.2);
+    width: 80%;
+}
+
+.mgs-input {
+    background: #111;
+    border: 1px solid var(--theme-accent);
+    color: var(--theme-accent);
+    padding: 10px;
+    width: 100%;
+    font-family: 'Courier New', monospace;
+}
+
+.mgs-input:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+#profile-rename-confirm-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn-danger {
+    border-color: #ff4444 !important;
+    color: #ff4444 !important;
 }
 
 #hub-continue-btn, 
@@ -571,11 +831,12 @@
     margin-top: 80px; 
 }
 
-:root { --theme-accent: #00ff41; } /* Default */
-[data-theme="retro"]    { --theme-accent: #00ff41; }
-[data-theme="modern"]   { --theme-accent: #8a2be2; }
-[data-theme="trans"]    { --theme-accent: #F5A9B8; }
-[data-theme="bisexual"] { --theme-accent: #9b4f96; }
+:root { --theme-accent: #00ff41; --theme-accent-rgb: 0, 255, 65; } /* Default */
+[data-theme="retro"]    { --theme-accent: #00ff41; --theme-accent-rgb: 0, 255, 65; }
+[data-theme="modern"]   { --theme-accent: #8a2be2; --theme-accent-rgb: 138, 43, 226; }
+[data-theme="trans"]    { --theme-accent: #F5A9B8; --theme-accent-rgb: 245, 169, 184; }
+[data-theme="lesbian"]  { --theme-accent: #d52d00; --theme-accent-rgb: 213, 45, 0; }
+[data-theme="bisexual"] { --theme-accent: #9b4f96; --theme-accent-rgb: 155, 79, 150; }
 
 .mgs-cog, .mgs-power {
     position: fixed !important;
@@ -793,17 +1054,23 @@ select.btn-mgs option {
     color: white;
 }
 
+#settings-sidebar {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--theme-accent) rgba(255, 255, 255, 0.06);
+}
+
 #settings-sidebar::-webkit-scrollbar {
-    display: none;
+    width: 8px;
 }
 
-#settings-sidebar {
-    -ms-overflow-style: none; 
-    scrollbar-width: none;
+#settings-sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
 }
 
-#settings-sidebar {
-    overflow-y: scroll; 
+#settings-sidebar::-webkit-scrollbar-thumb {
+    background: var(--theme-accent);
+    border-radius: 2px;
 }
 
 /* ============================================================

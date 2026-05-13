@@ -4,7 +4,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 const createListener = (channel, callback) => {
     const subscription = (event, ...args) => callback(...args);
     ipcRenderer.on(channel, subscription);
-    // Returns a function to remove this specific listener
     return () => ipcRenderer.removeListener(channel, subscription);
 };
 
@@ -23,6 +22,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // Requests (Two-way)
     getMonitors: () => ipcRenderer.invoke('get-monitors'),
+    createSaveProfile: (data) => ipcRenderer.invoke('create-save-profile', data),
+    getProfiles: (game) => ipcRenderer.invoke('get-profiles', game),
+    getBackups: (data) => ipcRenderer.invoke('get-backups', data),
+    getSaveSlots: (data) => ipcRenderer.invoke('get-save-slots', data),
+    renameProfile: (data) => ipcRenderer.invoke('rename-profile', data),
+    deleteProfile: (data) => ipcRenderer.invoke('delete-profile', data),
+    loadProfile: (data) => ipcRenderer.invoke('load-profile', data),
+    activateSaveSlot: (data) => ipcRenderer.invoke('activate-save-slot', data),
 
     // Listeners (With Cleanup Support)
     onFSChange: (callback) => createListener('fs-state-change', callback),

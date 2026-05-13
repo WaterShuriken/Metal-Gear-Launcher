@@ -22,6 +22,487 @@ class romPaths {
     static PO = 'Metal Gear Solid - Portable Ops.iso';
     static MGS4 = 'Metal Gear Solid 4 - Guns of the Patriots (USA) (En,Fr,De,Es,It) (v02.00).dec.iso';
     static PW = 'MGS PW/default.xex';
+
+    static names = {
+        MG: 'Metal Gear',
+        SR: "Snake's Revenge",
+        MG2: 'Metal Gear 2',
+        MGS: 'Metal Gear Solid',
+        GB: 'Ghost Babel',
+        MGS2: 'Sons of Liberty',
+        MGS3: 'Snake Eater',
+        ACID: 'Metal Gear Ac!d',
+        ACID2: 'Metal Gear Ac!d 2',
+        PO: 'Portable Ops',
+        MGS4: 'Guns of the Patriots',
+        PW: 'Peace Walker'
+    };
+
+    static getKeyByTarget(target) {
+        for (const key of Object.keys(this)) {
+            if (typeof this[key] === 'string' && this[key] === target) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    static getKeyByName(name) {
+        for (const [key, value] of Object.entries(this.names)) {
+            if (value === name) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    static getFolderName(key, fallback = '') {
+        return (fallback || this.names[key] || key || 'default')
+            .replace(/[\\/:*?"<>|]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+}
+
+window.activeProfile = "default";
+window.currentTargetGame = "";
+window.currentTargetGameKey = "";
+window.currentTargetLegacyKeys = [];
+window.currentTargetDisplayName = "";
+window.currentTargetEmu = "";
+let activeIntelCard = null;
+
+function getEmuType(emuPath = '') {
+    return emuPath.split('/')[0];
+}
+
+function savesSupportedForEmu(emuPath = '') {
+    return getEmuType(emuPath) !== 'xenia';
+}
+
+function getActiveProfileStorageKey(gameFolder) {
+    return `active-profile-${gameFolder}`;
+}
+
+function escapeAttr(value) {
+    return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, "\\'");
+}
+
+function getCardGameContext(cardElement, fallbackTarget = '', fallbackEmu = '') {
+    const clickAttr = cardElement?.getAttribute('onclick') || '';
+    const titleElement = cardElement?.querySelector('.game-title');
+    const displayName = titleElement ? titleElement.innerText.trim() : '';
+    const romKey = (() => {
+        for (const key in romPaths) {
+            if (clickAttr.includes(`romPaths.${key}`)) {
+                return key;
+            }
+        }
+        if (displayName) {
+            const nameKey = romPaths.getKeyByName(displayName);
+            if (nameKey) return nameKey;
+        }
+        return romPaths.getKeyByTarget(fallbackTarget) || '';
+    })();
+    const emuPath = fallbackEmu || (() => {
+        for (const key in emuPaths) {
+            if (clickAttr.includes(`emuPaths.${key}`)) {
+                return emuPaths[key];
+            }
+        }
+        return '';
+    })();
+    const resolvedDisplayName = displayName || (romPaths.names[romKey] || romKey || fallbackTarget);
+
+    return {
+        romKey,
+        emuPath,
+        emuType: getEmuType(emuPath),
+        displayName: resolvedDisplayName,
+        gameFolder: romPaths.getFolderName(romKey, resolvedDisplayName),
+        legacyKeys: romKey ? [romKey] : []
+    };
+}
+
+// ---------- PROFILE NAME VALIDATION ----------
+// Valid Windows folder name: no \ / : * ? " < > | and not purely dots/spaces
+const WINDOWS_FORBIDDEN = /[\\/:*?"<>|]/;
+const WINDOWS_RESERVED = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
+
+function applyThemeToOverlays(theme) {
+    const settingsSidebar = document.getElementById('settings-sidebar');
+    const saveManagerOverlay = document.getElementById('save-manager-overlay');
+    const saveManagerModal = document.getElementById('save-manager-modal');
+
+    if (settingsSidebar) settingsSidebar.setAttribute('data-theme', theme);
+    if (saveManagerOverlay) saveManagerOverlay.setAttribute('data-theme', theme);
+    if (saveManagerModal) saveManagerModal.setAttribute('data-theme', theme);
+}
+
+function validateProfileName(name) {
+    if (!name || !name.trim()) return "NAME CANNOT BE EMPTY.";
+    if (WINDOWS_FORBIDDEN.test(name)) return 'INVALID CHARACTERS: \\ / : * ? " < > |';
+    if (WINDOWS_RESERVED.test(name.trim())) return "RESERVED SYSTEM NAME — CHOOSE ANOTHER.";
+    if (name.trim().length > 30) return "MAX 30 CHARACTERS.";
+    return null; // null = valid
+}
+
+// ---------- CREATE PROFILE ----------
+window.createNewProfile = function() {
+    const menu = document.getElementById('profile-creation-menu');
+    const input = document.getElementById('new-profile-input');
+    const err = document.getElementById('profile-create-error');
+    if (menu) {
+        menu.style.display = 'flex';
+        input.value = "";
+        if (err) err.textContent = "";
+        input.focus();
+    }
+};
+
+window.closeProfileMenu = function() {
+    const menu = document.getElementById('profile-creation-menu');
+    if (menu) menu.style.display = 'none';
+};
+
+window.confirmProfileCreation = async function() {
+    const input = document.getElementById('new-profile-input');
+    const errEl = document.getElementById('profile-create-error');
+    const rawName = input.value.trim();
+
+    const validationError = validateProfileName(rawName);
+    if (validationError) {
+        if (errEl) errEl.textContent = validationError;
+        return;
+    }
+
+    try {
+        const result = await window.electronAPI.createSaveProfile({
+            game: window.currentTargetGame,
+            profile: rawName,
+            legacyKeys: window.currentTargetLegacyKeys
+        });
+
+        if (result && result.success) {
+            window.closeProfileMenu();
+            if (window.refreshProfileList) window.refreshProfileList();
+        } else if (result && result.error) {
+            if (errEl) errEl.textContent = result.error;
+        }
+    } catch (err) {
+        console.error("IPC Error:", err);
+    }
+};
+
+// ---------- RENAME PROFILE ----------
+let _profileBeingRenamed = null;
+
+window.openRenameMenu = function(profileName) {
+    _profileBeingRenamed = profileName;
+    const menu = document.getElementById('profile-rename-menu');
+    const input = document.getElementById('rename-profile-input');
+    const err = document.getElementById('profile-rename-error');
+    const confirmBtn = document.getElementById('profile-rename-confirm-btn');
+    if (menu) {
+        input.value = profileName;
+        if (err) err.textContent = "";
+        input.disabled = false;
+        if (confirmBtn) confirmBtn.disabled = false;
+        if (profileName.toLowerCase() === 'default') {
+            if (err) err.textContent = "DEFAULT PROFILE CANNOT BE RENAMED.";
+            input.disabled = true;
+            if (confirmBtn) confirmBtn.disabled = true;
+        }
+        menu.style.display = 'flex';
+        if (!input.disabled) {
+            input.focus();
+            input.select();
+        }
+    }
+};
+
+window.closeRenameMenu = function() {
+    const menu = document.getElementById('profile-rename-menu');
+    const input = document.getElementById('rename-profile-input');
+    const err = document.getElementById('profile-rename-error');
+    const confirmBtn = document.getElementById('profile-rename-confirm-btn');
+    if (menu) menu.style.display = 'none';
+    if (input) input.disabled = false;
+    if (confirmBtn) confirmBtn.disabled = false;
+    if (err) err.textContent = "";
+    _profileBeingRenamed = null;
+};
+
+window.confirmProfileRename = async function() {
+    const input = document.getElementById('rename-profile-input');
+    const errEl = document.getElementById('profile-rename-error');
+    const newName = input.value.trim();
+
+    if ((_profileBeingRenamed || '').toLowerCase() === 'default') {
+        if (errEl) errEl.textContent = "DEFAULT PROFILE CANNOT BE RENAMED.";
+        return;
+    }
+
+    const validationError = validateProfileName(newName);
+    if (validationError) {
+        if (errEl) errEl.textContent = validationError;
+        return;
+    }
+
+    if (newName === _profileBeingRenamed) {
+        window.closeRenameMenu();
+        return;
+    }
+
+    try {
+        const result = await window.electronAPI.renameProfile({
+            gameKey: window.currentTargetGame,
+            oldName: _profileBeingRenamed,
+            newName,
+            legacyKeys: window.currentTargetLegacyKeys
+        });
+
+        if (result && result.success) {
+            if (window.activeProfile === _profileBeingRenamed) {
+                window.activeProfile = newName;
+                localStorage.setItem(getActiveProfileStorageKey(window.currentTargetGame), newName);
+            }
+            window.closeRenameMenu();
+            if (window.refreshProfileList) window.refreshProfileList();
+        } else {
+            if (errEl) errEl.textContent = result?.error || "RENAME FAILED.";
+        }
+    } catch (err) {
+        console.error("Rename error:", err);
+    }
+};
+
+// ---------- DELETE PROFILE ----------
+let _profileBeingDeleted = null;
+
+window.openDeleteMenu = function(profileName) {
+    _profileBeingDeleted = profileName;
+    const menu = document.getElementById('profile-delete-menu');
+    const label = document.getElementById('profile-delete-label');
+    if (label) label.textContent = `PROFILE: [ ${profileName.toUpperCase()} ]`;
+    if (menu) menu.style.display = 'flex';
+};
+
+window.closeDeleteMenu = function() {
+    const menu = document.getElementById('profile-delete-menu');
+    if (menu) menu.style.display = 'none';
+    _profileBeingDeleted = null;
+};
+
+window.confirmProfileDelete = async function() {
+    if (!_profileBeingDeleted) return;
+
+    try {
+        const result = await window.electronAPI.deleteProfile({
+            gameKey: window.currentTargetGame,
+            profile: _profileBeingDeleted,
+            legacyKeys: window.currentTargetLegacyKeys
+        });
+
+        if (result && result.success) {
+            // If we deleted the active profile, fall back to 'default'
+            if (window.activeProfile === _profileBeingDeleted) {
+                window.activeProfile = 'default';
+                localStorage.setItem(getActiveProfileStorageKey(window.currentTargetGame), 'default');
+            }
+            window.closeDeleteMenu();
+            if (window.refreshProfileList) window.refreshProfileList();
+        } else {
+            console.error("Delete failed:", result?.error);
+        }
+    } catch (err) {
+        console.error("Delete error:", err);
+    }
+};
+
+// ---------- PROFILE LIST ----------
+window.refreshProfileList = async function() {
+    const profileList = document.getElementById('profile-list');
+    const backupList = document.getElementById('backup-list-manager');
+    const saveStateNotice = document.getElementById('save-state-notice');
+
+    if (!profileList || !window.currentTargetGame) return;
+
+    profileList.innerHTML = '';
+    backupList.innerHTML = '';
+    if (saveStateNotice) {
+        saveStateNotice.textContent = savesSupportedForEmu(window.currentTargetEmu)
+            ? 'SELECT A SAVE TO MAKE IT THE CURRENT SAVE FOR THIS PROFILE.'
+            : 'SAVE STATE ROTATION IS DISABLED FOR XENIA.';
+    }
+
+    try {
+        const profiles = await window.electronAPI.getProfiles({
+            gameKey: window.currentTargetGame,
+            legacyKeys: window.currentTargetLegacyKeys
+        });
+
+        if (!profiles || profiles.length === 0) {
+            profileList.innerHTML = `<div class="profile-empty">NO SAVE PROFILES FOUND</div>`;
+            return;
+        }
+
+        let activeProfileToLoad = null;
+
+        for (const profile of profiles) {
+            const isActive = profile === window.activeProfile;
+
+            const row = document.createElement('div');
+            row.className = `profile-row${isActive ? ' profile-row--active' : ''}`;
+            row.dataset.profile = profile;
+
+            row.innerHTML = `
+                <div class="profile-row__name" title="${profile}">
+                    ${isActive ? '<span class="profile-active-pip"></span>' : ''}
+                    ${profile.toUpperCase()}
+                </div>
+                <div class="profile-row__actions">
+                    <button class="profile-action-btn" title="Rename" onclick="window.openRenameMenu('${profile.replace(/'/g, "\\'")}')">✎</button>
+                    <button class="profile-action-btn profile-action-btn--danger" title="Delete" onclick="window.openDeleteMenu('${profile.replace(/'/g, "\\'")}')">✕</button>
+                </div>
+            `;
+
+            const actionButtons = row.querySelectorAll('.profile-action-btn');
+            const renameBtn = actionButtons[0];
+            const deleteBtn = actionButtons[1];
+
+            if (renameBtn) {
+                renameBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.openRenameMenu(profile);
+                });
+            }
+
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.openDeleteMenu(profile);
+                });
+            }
+
+            // Clicking the row (not its buttons) selects the profile and loads backups
+            row.addEventListener('click', async (e) => {
+                if (e.target.closest('.profile-row__actions')) return;
+
+                window.activeProfile = profile;
+                localStorage.setItem(getActiveProfileStorageKey(window.currentTargetGame), profile);
+                await window.electronAPI.loadProfile({
+                    gameKey: window.currentTargetGame,
+                    profile,
+                    emuType: getEmuType(window.currentTargetEmu),
+                    legacyKeys: window.currentTargetLegacyKeys
+                });
+
+                // Update active styling without full reload
+                document.querySelectorAll('.profile-row').forEach(r => {
+                    const pip = r.querySelector('.profile-active-pip');
+                    if (pip) pip.remove();
+                    r.classList.remove('profile-row--active');
+                });
+                row.classList.add('profile-row--active');
+                const nameEl = row.querySelector('.profile-row__name');
+                if (nameEl && !nameEl.querySelector('.profile-active-pip')) {
+                    const pip = document.createElement('span');
+                    pip.className = 'profile-active-pip';
+                    nameEl.prepend(pip);
+                }
+
+                await loadSavesForProfile(profile);
+            });
+
+            profileList.appendChild(row);
+
+            if (isActive) {
+                activeProfileToLoad = profile;
+            }
+        }
+
+        if (activeProfileToLoad) {
+            await loadSavesForProfile(activeProfileToLoad);
+        }
+
+    } catch (err) {
+        console.error("PROFILE LOAD ERROR:", err);
+    }
+};
+
+async function activateSaveSlot(slotId) {
+    return window.electronAPI.activateSaveSlot({
+        gameKey: window.currentTargetGame,
+        profile: window.activeProfile,
+        emuType: getEmuType(window.currentTargetEmu),
+        slotId,
+        legacyKeys: window.currentTargetLegacyKeys
+    });
+}
+
+async function loadSavesForProfile(profile) {
+    const backupList = document.getElementById('backup-list-manager');
+    if (!backupList) return;
+
+    backupList.innerHTML = '';
+
+    if (!savesSupportedForEmu(window.currentTargetEmu)) {
+        backupList.innerHTML = `<div class="profile-empty">SAVE STATES NOT AVAILABLE FOR XENIA</div>`;
+        return;
+    }
+
+    try {
+        const backups = await window.electronAPI.getSaveSlots({
+            gameKey: window.currentTargetGame,
+            profile,
+            emuType: getEmuType(window.currentTargetEmu),
+            legacyKeys: window.currentTargetLegacyKeys
+        });
+
+        if (!backups || backups.length === 0) {
+            backupList.innerHTML = `<div class="profile-empty">NO SAVES FOUND</div>`;
+            return;
+        }
+
+        backups.forEach(backup => {
+            const item = document.createElement('div');
+            item.className = `backup-item${backup.isCurrent ? ' backup-item--current' : ''}`;
+            // Format: 2024-01-15T14-30-00 → 2024-01-15 14:30:00
+            const pretty = backup.type === 'current'
+                ? 'CURRENT SAVE'
+                : backup.label.replace('T', ' ').replace(/-(\d{2})-(\d{2})$/, ':$1:$2');
+            item.innerHTML = `
+                <div class="backup-item__text">
+                    <span class="backup-item__label">${pretty}</span>
+                    <span class="backup-item__meta">${backup.type === 'current' ? 'ACTIVE FOR THIS PROFILE' : 'LOAD AS CURRENT SAVE'}</span>
+                </div>
+                ${backup.type === 'backup' ? `<button class="profile-action-btn backup-load-btn" data-slot="${escapeAttr(backup.id)}">LOAD</button>` : `<span class="backup-item__badge">LIVE</span>`}
+            `;
+            if (backup.type === 'backup') {
+                const loadButton = item.querySelector('.backup-load-btn');
+                loadButton.addEventListener('click', async (event) => {
+                    event.stopPropagation();
+                    const result = await activateSaveSlot(backup.id);
+                    if (result?.success) {
+                        await window.electronAPI.loadProfile({
+                            gameKey: window.currentTargetGame,
+                            profile,
+                            emuType: getEmuType(window.currentTargetEmu),
+                            legacyKeys: window.currentTargetLegacyKeys
+                        });
+                        await loadSavesForProfile(profile);
+                    }
+                });
+            }
+            backupList.appendChild(item);
+        });
+
+    } catch (err) {
+        console.error("SAVE LOAD ERROR:", err);
+    }
 }
 
 // --- 0. IMMEDIATE THEME APPLY (PREVENTS FLICKER) ---
@@ -41,8 +522,7 @@ const getPref = (key, defaultVal) => {
 function applyTheme() {
     const theme = getPref('mgs-theme', 'retro');
     document.body.setAttribute('data-theme', theme);
-    const sidebar = document.getElementById('settings-sidebar');
-    if (sidebar) sidebar.setAttribute('data-theme', theme);
+    applyThemeToOverlays(theme);
 }
 
 function setTheme(themeName) {
@@ -65,6 +545,14 @@ function toggleRetroEffects() {
 function updateEffectsBtnUI() {
     const btn = document.getElementById('effectsStatus');
     if (btn) btn.innerText = getPref('retro-effects', true) ? "ON" : "OFF";
+}
+
+function refreshSettingsUI() {
+    const fsState = getPref('fullscreen-pref', false);
+    if (typeof syncFullscreenUI === 'function') syncFullscreenUI(fsState);
+    if (typeof updateEffectsBtnUI === 'function') updateEffectsBtnUI();
+    if (typeof loadMonitors === 'function') loadMonitors();
+    if (typeof applyTheme === 'function') applyTheme();
 }
 
 // --- 3. FULLSCREEN & SIZE LOGIC ---
@@ -171,20 +659,17 @@ async function toggleSettings() {
             if (!response.ok) throw new Error('Settings file not found');
             const html = await response.text();
             
-            // Create Sidebar
             sidebar = document.createElement('div');
             sidebar.id = 'settings-sidebar';
             sidebar.innerHTML = html;
             document.body.appendChild(sidebar);
 
-            // Create Click-Outside Overlay
             overlay = document.createElement('div');
             overlay.id = 'settings-overlay';
-            overlay.onclick = toggleSettings; // Clicking overlay closes settings
+            overlay.onclick = toggleSettings;
             document.body.appendChild(overlay);
-            loadMonitors();
+            refreshSettingsUI();
 
-            // Force a tiny timeout so the CSS 'right' transition triggers correctly
             setTimeout(() => {
                 sidebar.classList.add('open');
                 overlay.classList.add('active');
@@ -201,44 +686,23 @@ async function toggleSettings() {
     }
 
     if (sidebar.classList.contains('open')) {
-        const fsState = getPref('fullscreen-pref', false);
-        if (typeof syncFullscreenUI === 'function') syncFullscreenUI(fsState);
-        if (typeof updateEffectsBtnUI === 'function') updateEffectsBtnUI();
-        if (typeof loadMonitors === 'function') loadMonitors();
-        if (typeof applyTheme === 'function') applyTheme();
+        refreshSettingsUI();
     }
 }
-
-let activeIntelCard = null;
 
 function openIntelMenu(e, cardElement) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     activeIntelCard = cardElement;
 
-    // 1. Get the raw onclick string (e.g., "missionControl(event, 'emu', romPaths.MGS3, ...)")
-    const clickAttr = cardElement.getAttribute('onclick');
-    
-    // 2. Identify the ROM Key by checking which Enum value is inside the string
-    let detectedKey = "UNKNOWN_MISSION";
-    for (const key in romPaths) {
-        if (clickAttr.includes(`romPaths.${key}`)) {
-            detectedKey = key; // Found it (e.g., "MGS3")
-            break;
-        }
-    }
-
-    // 3. Identify the Emulator
-    let detectedEmu = "";
-    for (const key in emuPaths) {
-        if (clickAttr.includes(`emuPaths.${key}`)) {
-            detectedEmu = emuPaths[key];
-            break;
-        }
-    }
-
-    // 4. Clean Display Name (Use the visible span)
-    const titleElement = cardElement.querySelector('.game-title');
-    const displayName = titleElement ? titleElement.innerText : detectedKey;
+    const clickAttr = cardElement.getAttribute('onclick') || "";
+    const targetMatch = clickAttr.match(/missionControl\(event,\s*'[^']+',\s*(?:romPaths\.([A-Z0-9_]+)|'([^']+)')/);
+    const target = targetMatch?.[1] ? romPaths[targetMatch[1]] : (targetMatch?.[2] || '');
+    const emuMatch = clickAttr.match(/missionControl\(event,\s*'[^']+',\s*(?:romPaths\.[A-Z0-9_]+|'[^']+'),\s*(?:emuPaths\.([A-Z0-9_]+)|'([^']*)')/);
+    const emuPath = emuMatch?.[1] ? emuPaths[emuMatch[1]] : (emuMatch?.[2] || '');
+    const gameContext = getCardGameContext(cardElement, target, emuPath);
+    const detectedKey = gameContext.romKey || 'UNKNOWN_MISSION';
+    const detectedEmu = gameContext.emuPath;
+    const displayName = gameContext.displayName || detectedKey;
 
     let menu = document.getElementById('intel-menu');
     if (!menu) {
@@ -249,7 +713,7 @@ function openIntelMenu(e, cardElement) {
 
     const isEmu = clickAttr.includes("'emu'");
     const saveButton = isEmu 
-        ? `<div class="intel-menu-item" onclick="openSaveManager(event, '${detectedKey}', '${detectedEmu}', '${displayName}')">[ MANAGE SAVES ]</div>` 
+        ? `<div class="intel-menu-item" onclick="openSaveManager(event, '${escapeAttr(detectedKey)}', '${escapeAttr(detectedEmu)}', '${escapeAttr(displayName)}')">[ MANAGE SAVES ]</div>` 
         : '';
 
     menu.innerHTML = `
@@ -268,10 +732,64 @@ function openIntelMenu(e, cardElement) {
     setTimeout(() => document.addEventListener('click', closeIntelMenu, { once: true }), 50);
 }
 
+async function openSaveManager(e, romKey, emuPath, displayName) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+
+    window.currentTargetGame = romPaths.getFolderName(romKey, displayName);
+    window.currentTargetGameKey = romKey;
+    window.currentTargetLegacyKeys = romKey ? [romKey] : [];
+    window.currentTargetDisplayName = displayName;
+    console.log(`[SYSTEM] Target Locked: ${window.currentTargetGame}`);
+
+    let overlay = document.getElementById('save-manager-overlay');
+    if (!overlay) {
+        try {
+            const response = await fetch("../../pages/save-manager.html");
+            const html = await response.text();
+            
+            overlay = document.createElement('div');
+            overlay.id = 'save-manager-overlay';
+            overlay.innerHTML = `<div id="save-manager-modal">${html}</div>`;
+            document.body.appendChild(overlay);
+            applyThemeToOverlays(getPref('mgs-theme', 'retro'));
+
+            overlay.onclick = (ev) => { if (ev.target.id === 'save-manager-overlay') closeSaveManager(); };
+        } catch (err) { return console.error("Load Failed:", err); }
+    }
+
+    overlay.style.display = 'flex';
+    applyThemeToOverlays(getPref('mgs-theme', 'retro'));
+    
+    setTimeout(() => {
+        overlay.classList.add('active');
+
+        // Rebind the new profile button (avoids double-fire from inline onclick)
+        const newProfileBtn = overlay.querySelector('button[onclick*="createNewProfile"]');
+        if (newProfileBtn) {
+            newProfileBtn.removeAttribute('onclick'); 
+            newProfileBtn.onclick = () => window.createNewProfile();
+        }
+
+        const label = document.getElementById('active-game-label');
+        if (label) label.innerText = `MISSION: ${displayName.toUpperCase()}`;
+
+        window.activeProfile = localStorage.getItem(getActiveProfileStorageKey(window.currentTargetGame)) || 'default';
+        window.currentTargetEmu = emuPath;
+        if (window.refreshProfileList) window.refreshProfileList();
+    }, 50);
+}
+
+function closeSaveManager() {
+    const overlay = document.getElementById('save-manager-overlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        setTimeout(() => { overlay.style.display = 'none'; }, 300);
+    }
+}
+
 function launchFromIntelMenu() {
     if (activeIntelCard) {
-        // Trigger missionControl manually via the stored card's native click logic
-        activeIntelCard.click(); 
+        activeIntelCard.click();
         closeIntelMenu();
     }
 }
@@ -279,83 +797,6 @@ function launchFromIntelMenu() {
 function closeIntelMenu() {
     const menu = document.getElementById('intel-menu');
     if (menu) menu.style.display = 'none';
-    // activeIntelCard is NOT cleared here to allow missionControl to finish
-}
-
-async function openSaveManager(e, romKey, emuPath, displayName) {
-    if (e) { e.preventDefault(); e.stopPropagation(); }
-    closeIntelMenu(); 
-
-    currentTargetGame = romKey; 
-    currentTargetEmu = emuPath.split('/')[0]; // e.g., "pcsx2"
-
-    let overlay = document.getElementById('save-manager-overlay');
-    
-    if (!overlay) {
-        try {
-            const managerPath = '../../pages/save-manager.html';
-            const response = await fetch(managerPath);
-            const html = await response.text();
-            
-            overlay = document.createElement('div');
-            overlay.id = 'save-manager-overlay';
-            // Start it completely hidden
-            overlay.style.display = 'none';
-            overlay.innerHTML = `<div id="save-manager-modal">${html}</div>`;
-            document.body.appendChild(overlay);
-
-            // Close when clicking the dark area, but NOT the modal box
-            overlay.onclick = (event) => {
-                if (event.target.id === 'save-manager-overlay') {
-                    closeSaveManager();
-                }
-            };
-        } catch (err) {
-            console.error("Fetch failed:", err);
-            return;
-        }
-    }
-
-    overlay.style.display = 'flex';
-
-    setTimeout(() => {
-        overlay.classList.add('active');
-        
-        // Update labels
-        const label = document.getElementById('active-game-label');
-        if (label) label.innerText = `MISSION: ${displayName.toUpperCase()}`;
-        if (typeof applyTheme === 'function') applyTheme();
-    }, 10);
-}
-
-function closeSaveManager() {
-    const overlay = document.getElementById('save-manager-overlay');
-    if (overlay) {
-        // 🟢 Remove the class to start the CSS fade-out
-        overlay.classList.remove('active');
-
-        // 🟢 Wait for CSS transition (0.3s) then hide the display entirely
-        setTimeout(() => {
-            // Check if it's still closed (prevents flickering if opened mid-close)
-            if (!overlay.classList.contains('active')) {
-                overlay.style.display = 'none';
-            }
-        }, 300);
-    }
-}
-
-async function createNewProfile() {
-    const profileName = prompt("ENTER PROFILE CODENAME (e.g., 'BIG BOSS RUN'):");
-    if (!profileName) return;
-
-    const safeName = profileName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    // Send to Main to create the folder
-    await window.electronAPI.createSaveProfile({ 
-        emu: currentTargetEmu, 
-        game: currentTargetGame, 
-        profile: safeName 
-    });
-    refreshProfileList();
 }
 
 let pendingCard = null;
@@ -363,6 +804,7 @@ let pendingSteamExe = "";
 
 function missionControl(event, type, target, emu, steamExe = "") {
     const card = event.currentTarget;
+    const gameContext = getCardGameContext(card, target, emu);
 
     if (card.classList.contains('running')) {
         const modal = document.getElementById('abort-modal');
@@ -370,7 +812,15 @@ function missionControl(event, type, target, emu, steamExe = "") {
         pendingCard = card;
         pendingSteamExe = steamExe;
     } else {
-        window.electronAPI.launchMission({ type, target, emu, steamExe });
+        window.electronAPI.launchMission({
+            type,
+            target,
+            emu,
+            steamExe,
+            gameKey: gameContext.gameFolder,
+            profile: localStorage.getItem(getActiveProfileStorageKey(gameContext.gameFolder)) || 'default',
+            legacyKeys: gameContext.legacyKeys
+        });
         
         document.querySelectorAll('.game-card').forEach(c => c.classList.remove('running'));
         card.classList.add('running');
@@ -389,14 +839,13 @@ function confirmAbort() {
 function closeAbortModal() {
     document.getElementById('abort-modal').style.display = 'none';
     pendingCard = null;
-    pendingSteamExe = steamExe;
+    pendingSteamExe = "";
 }
 
 let activeTime = 'all';
 let activeStories = ['canon', 'parallel', 'ignored', 'alternate'];
 
 function toggleTime(choice, btn) {
-    // UI: Radio Button behavior
     document.querySelectorAll('#time-filters .btn-filter').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     
@@ -405,7 +854,6 @@ function toggleTime(choice, btn) {
 }
 
 function toggleStory(choice, btn) {
-    // UI: Checkbox behavior (Toggle on/off)
     btn.classList.toggle('active');
     
     if (activeStories.includes(choice)) {
@@ -423,21 +871,18 @@ function runMasterFilter() {
         const cardCat = card.getAttribute('data-category');
         const isRetro = card.getAttribute('data-retro') === 'true';
         
-        // Check Time Condition
         let timeMatch = false;
         if (activeTime === 'all') timeMatch = true;
         if (activeTime === 'retro' && isRetro) timeMatch = true;
         if (activeTime === 'modern' && !isRetro) timeMatch = true;
 
-        // Check Story Condition
         const storyMatch = activeStories.includes(cardCat);
 
-        // Final Verdict: Must pass BOTH tests
         card.classList.toggle('hidden', !(timeMatch && storyMatch));
     });
 }
 
-// Update your existing mission-ended listener
+// --- 6. EVENT LISTENERS ---
 window.electronAPI.onMissionEnd((data) => {
     if (data && data.duration) {
         savePlaytime(data.target, data.duration);
@@ -445,7 +890,6 @@ window.electronAPI.onMissionEnd((data) => {
     document.querySelectorAll('.game-card').forEach(c => c.classList.remove('running'));
 });
 
-// --- 6. EVENT LISTENERS ---
 window.electronAPI.onFSChange(syncFullscreenUI);
 
 window.electronAPI.onSaveMonitor((id) => {
@@ -466,12 +910,6 @@ window.addEventListener('storage', (e) => {
 
 window.addEventListener('focus', applyTheme);
 document.addEventListener('DOMContentLoaded', initApp);
-
-window.electronAPI.onMissionEnd(() => {
-    document.querySelectorAll('.game-card').forEach(c => {
-        c.classList.remove('running');
-    });
-});
 
 window.electronAPI.onAppVersion((version) => {
     const versionDisplay = document.getElementById('version-display');
@@ -503,6 +941,5 @@ window.electronAPI.onUpdateStatus((message) => {
         const header = document.querySelector('.update-header');
         header.innerText = "Update Complete";
         header.style.color = "#fff";
-        // main.js handles the auto-quitAndInstall()
     }
 });
