@@ -124,6 +124,119 @@ function getCardGameContext(cardElement, fallbackTarget = '', fallbackEmu = '') 
     };
 }
 
+const manualFileMap = {
+    MG: 'MG_Manual.pdf',
+    MG2: 'MG2_Manual.pdf',
+    MGS: 'MGS_Manual.pdf',
+    GB: 'GB_Manual.pdf',
+    SR: 'SR_Manual.pdf',
+    MGS2: 'MGS2_Manual.pdf',
+    MGS3: 'MGS3_Manual.pdf',
+    ACID: 'ACID_Manual.pdf',
+    ACID2: 'ACID2_Manual.pdf',
+    PO: 'PO_Manual.pdf',
+    MGS4: 'MGS4_Manual.pdf',
+    PW: 'PW_Manual.pdf',
+    MGR: 'MGR_Manual.pdf',
+    MGSV: 'MGSV_Manual.pdf'
+};
+
+function getManualFileName(gameContext) {
+    if (!gameContext) return null;
+
+    if (gameContext.romKey && manualFileMap[gameContext.romKey]) {
+        return manualFileMap[gameContext.romKey];
+    }
+
+    const normalizedName = (gameContext.displayName || '').toLowerCase();
+    if (normalizedName.includes('phantom pain') || normalizedName.includes('mgsv') || normalizedName.includes('the phantom pain')) {
+        return manualFileMap.MGSV;
+    }
+    if (normalizedName.includes('mgr') || normalizedName.includes('revengeance') || normalizedName.includes('metal gear rising')) {
+        return manualFileMap.MGR;
+    }
+
+    return null;
+}
+
+function getAppRootUrl() {
+    const href = window.location.href;
+    const pagesIndex = href.indexOf('/pages/');
+    if (pagesIndex !== -1) {
+        return href.substring(0, pagesIndex);
+    }
+    return href.substring(0, href.lastIndexOf('/') + 1).replace(/\/$/, '');
+}
+
+function getManualUrl(filename) {
+    const root = getAppRootUrl();
+    return `${root.replace(/\/$/, '')}/img/manuals/${filename}`;
+}
+
+function openManualViewer(e, cardElement) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    const gameContext = getCardGameContext(cardElement);
+    const manualFile = getManualFileName(gameContext);
+    if (!manualFile) {
+        closeIntelMenu();
+        alert(`NO MANUAL FOUND FOR ${gameContext.displayName.toUpperCase()}`);
+        return;
+    }
+
+    const manualUrl = getManualUrl(manualFile);
+    let overlay = document.getElementById('manual-viewer-overlay');
+
+    const manualViewerHtml = `
+        <div id="manual-viewer-modal">
+            <div class="manual-viewer-header">
+                <div id="manual-viewer-title">MANUAL: ${gameContext.displayName.toUpperCase()}</div>
+                <button id="manual-viewer-close" class="btn-mgs btn-sm-mgs">CLOSE</button>
+            </div>
+            <div id="manual-viewer-content">
+                <iframe id="manual-viewer-frame" src="${manualUrl}" frameborder="0" allowfullscreen></iframe>
+                <div class="manual-viewer-fallback">
+                    <p>PDF rendering failed. Use the button below to open the manual directly.</p>
+                    <a id="manual-viewer-link" class="btn-mgs" href="${manualUrl}" target="_blank">OPEN MANUAL</a>
+                </div>
+            </div>
+        </div>
+    `;
+
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'manual-viewer-overlay';
+        document.body.appendChild(overlay);
+    }
+
+    overlay.innerHTML = manualViewerHtml;
+    overlay.onclick = (ev) => {
+        if (ev.target.id === 'manual-viewer-overlay') closeManualViewer();
+    };
+
+    const closeButton = overlay.querySelector('#manual-viewer-close');
+    if (closeButton) closeButton.addEventListener('click', closeManualViewer);
+
+    overlay.style.display = 'flex';
+    setTimeout(() => overlay.classList.add('active'), 10);
+    closeIntelMenu();
+}
+
+function closeManualViewer() {
+    const overlay = document.getElementById('manual-viewer-overlay');
+    if (!overlay) return;
+
+    overlay.classList.remove('active');
+    setTimeout(() => {
+        overlay.style.display = 'none';
+    }, 200);
+}
+
+window.openManualViewer = openManualViewer;
+
 // ---------- PROFILE NAME VALIDATION ----------
 // Valid Windows folder name: no \ / : * ? " < > | and not purely dots/spaces
 const WINDOWS_FORBIDDEN = /[\\/:*?"<>|]/;
@@ -716,11 +829,16 @@ function openIntelMenu(e, cardElement) {
         ? `<div class="intel-menu-item" onclick="openSaveManager(event, '${escapeAttr(detectedKey)}', '${escapeAttr(detectedEmu)}', '${escapeAttr(displayName)}')">[ MANAGE SAVES ]</div>` 
         : '';
 
+    const manualFile = getManualFileName(gameContext);
+    const manualButton = manualFile
+        ? `<div class="intel-menu-item" onclick="openManualViewer(event, activeIntelCard)">[ VIEW MANUAL ]</div>`
+        : `<div class="intel-menu-item intel-menu-item--disabled">[ MANUAL UNAVAILABLE ]</div>`;
+
     menu.innerHTML = `
         <div class="intel-menu-item" onclick="launchFromIntelMenu()">[ LAUNCH MISSION ]</div>
         <div class="intel-menu-divider"></div>
         ${saveButton}
-        <div class="intel-menu-item" onclick="closeIntelMenu()">VIEW INTEL FILES</div>
+        ${manualButton}
         <div class="intel-menu-divider"></div>
         <div class="intel-menu-item" style="color: #ff4444;" onclick="closeIntelMenu()">CANCEL</div>
     `;
