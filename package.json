@@ -1,6 +1,6 @@
 {
   "name": "metal-gear-launcher",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A launcher for the Metal Gear Series of games",
   "main": "main.js",
   "scripts": {

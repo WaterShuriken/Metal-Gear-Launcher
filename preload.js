@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getProfiles: (game) => ipcRenderer.invoke('get-profiles', game),
     getBackups: (data) => ipcRenderer.invoke('get-backups', data),
     getSaveSlots: (data) => ipcRenderer.invoke('get-save-slots', data),
+    getPlaytimes: () => ipcRenderer.invoke('get-playtimes'),
     renameProfile: (data) => ipcRenderer.invoke('rename-profile', data),
     deleteProfile: (data) => ipcRenderer.invoke('delete-profile', data),
     loadProfile: (data) => ipcRenderer.invoke('load-profile', data),

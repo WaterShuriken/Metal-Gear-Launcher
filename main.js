@@ -11,6 +11,8 @@ let mainWindow;
 let isSwitchingMonitor = false;
 let gameProcess = null;
 let steamInterval = null;
+let playtimes = {};
+let sessionStarts = {};
 
 const EMULATOR_SAVE_PATHS = {
     pcsx2: ['memcards', 'sstates'],
@@ -207,6 +209,38 @@ async function readSaveSlots(rootDir, gameKey, profile, emuType, legacyKeys = []
     }
 
     return slots;
+}
+
+async function loadPlaytimes() {
+    const playtimesPath = path.join(app.getPath('userData'), 'playtimes.json');
+    try {
+        if (await fs.exists(playtimesPath)) {
+            playtimes = await fs.readJson(playtimesPath);
+        } else {
+            playtimes = {};
+        }
+    } catch (err) {
+        console.error('Failed to load playtimes:', err);
+        playtimes = {};
+    }
+}
+
+async function savePlaytimes() {
+    const playtimesPath = path.join(app.getPath('userData'), 'playtimes.json');
+    try {
+        await fs.writeJson(playtimesPath, playtimes);
+    } catch (err) {
+        console.error('Failed to save playtimes:', err);
+    }
+}
+
+function updatePlaytime(gameKey) {
+    if (sessionStarts[gameKey]) {
+        const duration = Math.floor((Date.now() - sessionStarts[gameKey]) / 1000);
+        playtimes[gameKey] = (playtimes[gameKey] || 0) + duration;
+        delete sessionStarts[gameKey];
+        savePlaytimes();
+    }
 }
 
 /**
@@ -421,7 +455,9 @@ ipcMain.handle('activate-save-slot', async (event, { gameKey, profile, emuType, 
     }
 });
 
-function watchSteamProcess(exeName, target) {
+ipcMain.handle('get-playtimes', () => playtimes);
+
+function watchSteamProcess(exeName, target, gameKey) {
     if (steamInterval) clearInterval(steamInterval);
     
     setTimeout(() => {
@@ -430,6 +466,7 @@ function watchSteamProcess(exeName, target) {
                 if (!stdout.toLowerCase().includes(exeName.toLowerCase())) {
                     clearInterval(steamInterval);
                     steamInterval = null;
+                    updatePlaytime(gameKey);
                     if (mainWindow) mainWindow.webContents.send('mission-ended');
                 }
             });
@@ -440,9 +477,11 @@ function watchSteamProcess(exeName, target) {
 ipcMain.on('launch-mission', async (event, { type, target, emu, steamExe, gameKey, profile = 'default', legacyKeys = [] }) => {
     if (gameProcess || steamInterval) return;
 
+    sessionStarts[gameKey] = Date.now();
+
     if (type === 'steam') {
         shell.openExternal(`steam://rungameid/${target}`);
-        if (steamExe) watchSteamProcess(steamExe, target);
+        if (steamExe) watchSteamProcess(steamExe, target, gameKey);
         return; 
     }
 
@@ -482,6 +521,8 @@ ipcMain.on('launch-mission', async (event, { type, target, emu, steamExe, gameKe
             } catch (syncErr) {
                 console.error("SAVE SYNC ERROR:", syncErr);
             }
+
+            updatePlaytime(gameKey);
         }
 
         if (mainWindow) mainWindow.webContents.send('mission-ended');
@@ -595,8 +636,9 @@ function createWindow() {
  * APP LIFECYCLE
  */
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     createWindow();
+    await loadPlaytimes();
     Menu.setApplicationMenu(null);
     initUpdater();
 });

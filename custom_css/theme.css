@@ -8,6 +8,14 @@
     font-size: 0.7rem !important;
     margin-bottom: 0 !important;
 }
+
+.playtime {
+    font-size: 0.6rem;
+    color: var(--theme-text-secondary, #888);
+    text-align: center;
+    margin-top: 1px;
+    line-height: 1.2;
+}
  
 /* Compact profile row */
 .profile-row {
@@ -884,7 +892,7 @@
 .game-card {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--theme-accent);
-    padding: 10px;
+    padding: 6px;
     cursor: pointer;
     transition: all 0.3s ease;
     border-radius: 12px;
@@ -898,7 +906,7 @@
     aspect-ratio: 2 / 3;
     object-fit: cover;
     border-radius: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 2px;
 }
 
 .game-card .title-wrap {
@@ -907,7 +915,7 @@
     justify-content: center;
     align-items: center;
     width: 100%;
-    min-height: 3.5rem;
+    min-height: 1.5rem;
 }
 
 .game-card .game-title {

@@ -64,6 +64,20 @@ class romPaths {
     }
 }
 
+function formatPlaytime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
+const steamAppIdToKey = {
+    '235460': 'MGR', // Revengeance
+    '311340': 'GZ', // Ground Zeroes
+    '543900': 'MGSURVIVE',
+    '287700': 'MGSV' // Phantom Pain
+};
+
 window.activeProfile = "default";
 window.currentTargetGame = "";
 window.currentTargetGameKey = "";
@@ -747,6 +761,15 @@ async function initApp() {
     applyRetroEffects();
     applyLazyLoadingToGameCards();
 
+    // Load and display playtimes
+    const playtimes = await window.electronAPI.getPlaytimes();
+    document.querySelectorAll('.game-card').forEach(card => {
+        const key = card.dataset.gameKey;
+        const time = playtimes[key] || 0;
+        const span = card.querySelector('.playtime');
+        if (span) span.textContent = `Playtime: ${formatPlaytime(time)}`;
+    });
+
     const startFS = getPref('fullscreen-pref', false);
     syncFullscreenUI(startFS);
 
@@ -950,12 +973,19 @@ function missionControl(event, type, target, emu, steamExe = "") {
         pendingCard = card;
         pendingSteamExe = steamExe;
     } else {
+        let gameKey;
+        if (type === 'steam') {
+            gameKey = steamAppIdToKey[target] || target;
+        } else {
+            gameKey = gameContext.romKey;
+        }
+
         window.electronAPI.launchMission({
             type,
             target,
             emu,
             steamExe,
-            gameKey: gameContext.gameFolder,
+            gameKey,
             profile: localStorage.getItem(getActiveProfileStorageKey(gameContext.gameFolder)) || 'default',
             legacyKeys: gameContext.legacyKeys
         });
@@ -1021,11 +1051,17 @@ function runMasterFilter() {
 }
 
 // --- 6. EVENT LISTENERS ---
-window.electronAPI.onMissionEnd((data) => {
-    if (data && data.duration) {
-        savePlaytime(data.target, data.duration);
-    }
+window.electronAPI.onMissionEnd(async (data) => {
     document.querySelectorAll('.game-card').forEach(c => c.classList.remove('running'));
+    
+    // Refresh playtimes from backend
+    const playtimes = await window.electronAPI.getPlaytimes();
+    document.querySelectorAll('.game-card').forEach(card => {
+        const key = card.dataset.gameKey;
+        const time = playtimes[key] || 0;
+        const span = card.querySelector('.playtime');
+        if (span) span.textContent = `Playtime: ${formatPlaytime(time)}`;
+    });
 });
 
 window.electronAPI.onFSChange(syncFullscreenUI);
