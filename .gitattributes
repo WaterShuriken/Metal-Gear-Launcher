@@ -1,1 +1,2 @@
 img/manuals/MGSV_Manual.pdf filter=lfs diff=lfs merge=lfs -text
+img/manuals/*.pdf filter=lfs diff=lfs merge=lfs -text
