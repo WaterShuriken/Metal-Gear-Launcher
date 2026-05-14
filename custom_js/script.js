@@ -1078,7 +1078,6 @@ function missionControl(event, type, target, emu, steamExe = "") {
         }
 
         saveLastPlayedGame(gameContext, type, target, emu, steamExe);
-        renderRecentGameButton(window.cachedPlaytimes || {});
 
         window.electronAPI.launchMission({
             type,
