@@ -980,12 +980,16 @@
 
 .mgs-cog {
     position: fixed !important;
-    top: 20px !important;
     right: 25px !important;
     left: auto !important; 
     display: block;
+    z-index: 10010 !important;
     -webkit-mask-image: url('../img/cog.png') !important;
     mask-image: url('../img/cog.png') !important;
+}
+
+.index-page .mgs-cog {
+    top: 25px !important;
 }
 
 .mgs-power {
@@ -1056,8 +1060,7 @@
     backdrop-filter: blur(15px); 
     border-left: 2px solid var(--theme-accent);
     box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 #settings-overlay {
@@ -1085,17 +1088,25 @@
 #settings-sidebar .hub-container {
     display: flex;
     flex-direction: column;
-    min-height: 100%;
+    height: 100%;
     width: 100%;
-    padding: 5vh 30px;
+    padding: 5vh 30px 30px;
     box-sizing: border-box;
-    transform: none !important;     
-    animation: none !important;      
-    width: 100% !important;         
+    transform: none !important;
+    animation: none !important;
+    width: 100% !important;
     max-width: 100% !important;
-    margin: 0 !important;           
-    border: none !important;         
+    margin: 0 !important;
+    border: none !important;
     background: transparent !important;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#settings-sidebar .hub-container::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 
 #settings-sidebar .btn-mgs::before {
@@ -1107,7 +1118,17 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    padding-bottom: 10px;
 }
+
+#settings-sidebar footer {
+    margin-top: auto;
+    position: sticky;
+    bottom: 0;
+    padding-top: 10px;
+    background: rgba(10, 10, 15, 0.92);
+}
+
 
 #settings-sidebar .btn-mgs {
     display: block;
@@ -1179,24 +1200,7 @@ select.btn-mgs option {
     color: white;
 }
 
-#settings-sidebar {
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--theme-accent) rgba(255, 255, 255, 0.06);
-}
 
-#settings-sidebar::-webkit-scrollbar {
-    width: 8px;
-}
-
-#settings-sidebar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.04);
-}
-
-#settings-sidebar::-webkit-scrollbar-thumb {
-    background: var(--theme-accent);
-    border-radius: 2px;
-}
 
 /* ============================================================
    2. RETRO CRT THEME

@@ -93,10 +93,9 @@ function getCardGameContext(cardElement, fallbackTarget = '', fallbackEmu = '') 
     const titleElement = cardElement?.querySelector('.game-title');
     const displayName = titleElement ? titleElement.innerText.trim() : '';
     const romKey = (() => {
-        for (const key in romPaths) {
-            if (clickAttr.includes(`romPaths.${key}`)) {
-                return key;
-            }
+        const romMatch = clickAttr.match(/romPaths\.([A-Z0-9_]+)/);
+        if (romMatch) {
+            return romMatch[1];
         }
         if (displayName) {
             const nameKey = romPaths.getKeyByName(displayName);
@@ -105,10 +104,9 @@ function getCardGameContext(cardElement, fallbackTarget = '', fallbackEmu = '') 
         return romPaths.getKeyByTarget(fallbackTarget) || '';
     })();
     const emuPath = fallbackEmu || (() => {
-        for (const key in emuPaths) {
-            if (clickAttr.includes(`emuPaths.${key}`)) {
-                return emuPaths[key];
-            }
+        const emuMatch = clickAttr.match(/emuPaths\.([A-Z0-9_]+)/);
+        if (emuMatch) {
+            return emuPaths[emuMatch[1]] || '';
         }
         return '';
     })();
@@ -638,6 +636,23 @@ function applyTheme() {
     applyThemeToOverlays(theme);
 }
 
+function applyLazyLoadingToGameCards() {
+    const images = document.querySelectorAll('.game-card img');
+    images.forEach(img => {
+        if (!img.hasAttribute('loading')) {
+            img.loading = 'lazy';
+        }
+        if (!img.hasAttribute('decoding')) {
+            img.decoding = 'async';
+        }
+        img.style.opacity = '0';
+        img.style.transition = 'opacity 0.25s ease-in-out';
+        img.addEventListener('load', () => {
+            img.style.opacity = '1';
+        });
+    });
+}
+
 function setTheme(themeName) {
     localStorage.setItem('mgs-theme', themeName);
     applyTheme();
@@ -730,6 +745,7 @@ function changeMonitor() {
 async function initApp() {
     applyTheme();
     applyRetroEffects();
+    applyLazyLoadingToGameCards();
 
     const startFS = getPref('fullscreen-pref', false);
     syncFullscreenUI(startFS);
@@ -779,7 +795,11 @@ async function toggleSettings() {
 
             overlay = document.createElement('div');
             overlay.id = 'settings-overlay';
-            overlay.onclick = toggleSettings;
+            overlay.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSettings();
+            };
             document.body.appendChild(overlay);
             refreshSettingsUI();
 
