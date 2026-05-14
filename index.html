@@ -32,6 +32,7 @@
 
     <!-- Hub Interface -->
     <main class="hub-container text-center" style="margin-top: 15rem;">
+        <div id="recent-game-container" class="recent-game-section hidden"></div>
         <h1 class="mb-5 retro-only">MISSION SELECT</h1>
         
         <nav class="button-stack">
@@ -46,5 +47,19 @@
         </footer>
     </main>
     <div class="version-tag" id="version-display"></div>
+
+    <div id="abort-modal" class="mgs-modal">
+        <div class="mgs-modal-content">
+            <div class="mgs-modal-header">[ MISSION ALERT ]</div>
+            <div class="mgs-modal-body">
+                <p>ABORT ACTIVE MISSION?</p>
+                <p class="opacity-50" style="font-size: 0.6rem;">CURRENT PROGRESS WILL BE TERMINATED</p>
+            </div>
+            <div class="mgs-modal-footer">
+                <button class="btn-mgs btn-confirm" onclick="confirmAbort()">[ YES ]</button>
+                <button class="btn-mgs btn-cancel" onclick="closeAbortModal()">[ NO ]</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

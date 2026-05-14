@@ -71,6 +71,92 @@ function formatPlaytime(seconds) {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+const RECENT_GAME_STORAGE_KEY = 'mgs-last-played-game';
+window.cachedPlaytimes = {};
+
+function saveLastPlayedGame(gameContext, type, target, emu, steamExe = '') {
+    if (!gameContext) return;
+    const payload = {
+        type,
+        target,
+        emu,
+        steamExe,
+        gameKey: gameContext.romKey || '',
+        displayName: gameContext.displayName || '',
+        isRetro: gameContext.emuType === 'retro',
+        gameFolder: gameContext.gameFolder || '',
+        legacyKeys: gameContext.legacyKeys || []
+    };
+    localStorage.setItem(RECENT_GAME_STORAGE_KEY, JSON.stringify(payload));
+}
+
+function loadLastPlayedGame() {
+    try {
+        const raw = localStorage.getItem(RECENT_GAME_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+        console.error('Failed to load last played game:', err);
+        return null;
+    }
+}
+
+function renderRecentGameButton(playtimes = {}) {
+    const container = document.getElementById('recent-game-container');
+    if (!container) return;
+
+    const recent = loadLastPlayedGame();
+    if (!recent || !recent.displayName || !recent.type || !recent.target) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    container.classList.remove('hidden');
+    container.innerHTML = '';
+
+    const card = document.createElement('div');
+    card.id = 'recent-game-card';
+    card.className = 'game-card resume-card';
+    card.dataset.gameKey = recent.gameKey || '';
+    card.dataset.emu = recent.emu || '';
+    card.dataset.retro = recent.isRetro ? 'true' : 'false';
+    card.dataset.desc = recent.displayName;
+    card.setAttribute('oncontextmenu', 'openIntelMenu(event, this)');
+    card.setAttribute('onclick', `missionControl(event, ${JSON.stringify(recent.type)}, ${JSON.stringify(recent.target)}, ${JSON.stringify(recent.emu)}, ${JSON.stringify(recent.steamExe || '')})`);
+
+    const runningKey = localStorage.getItem('running-game-key');
+    if (runningKey === recent.gameKey) {
+        card.classList.add('running');
+    }
+
+    const intelTrigger = document.createElement('div');
+    intelTrigger.className = 'intel-trigger';
+    intelTrigger.setAttribute('onclick', 'openIntelMenu(event, this.parentElement)');
+    intelTrigger.textContent = '...';
+
+    const statusOverlay = document.createElement('div');
+    statusOverlay.className = 'status-overlay';
+    statusOverlay.innerHTML = '<div class="play-icon"></div><div class="pause-icon"></div>';
+
+    const tag = document.createElement('div');
+    tag.className = 'canon-tag tag-resume';
+    tag.textContent = 'CONTINUE THE MISSION';
+
+    const titleWrap = document.createElement('div');
+    titleWrap.className = 'title-wrap';
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'game-title';
+    titleSpan.textContent = recent.displayName;
+    titleWrap.appendChild(titleSpan);
+
+    const playtimeSpan = document.createElement('div');
+    playtimeSpan.className = 'playtime';
+    playtimeSpan.textContent = `Playtime: ${formatPlaytime(playtimes[recent.gameKey] || 0)}`;
+
+    card.append(intelTrigger, statusOverlay, tag, titleWrap, playtimeSpan);
+    container.appendChild(card);
+}
+
 const steamAppIdToKey = {
     '235460': 'MGR', // Revengeance
     '311340': 'GZ', // Ground Zeroes
@@ -107,6 +193,10 @@ function getCardGameContext(cardElement, fallbackTarget = '', fallbackEmu = '') 
     const titleElement = cardElement?.querySelector('.game-title');
     const displayName = titleElement ? titleElement.innerText.trim() : '';
     const romKey = (() => {
+        // Check dataset first (for resume card)
+        if (cardElement?.dataset?.gameKey) {
+            return cardElement.dataset.gameKey;
+        }
         const romMatch = clickAttr.match(/romPaths\.([A-Z0-9_]+)/);
         if (romMatch) {
             return romMatch[1];
@@ -117,12 +207,16 @@ function getCardGameContext(cardElement, fallbackTarget = '', fallbackEmu = '') 
         }
         return romPaths.getKeyByTarget(fallbackTarget) || '';
     })();
-    const emuPath = fallbackEmu || (() => {
+    const emuPath = (() => {
+        // Check dataset first
+        if (cardElement?.dataset?.emu) {
+            return cardElement.dataset.emu;
+        }
         const emuMatch = clickAttr.match(/emuPaths\.([A-Z0-9_]+)/);
         if (emuMatch) {
             return emuPaths[emuMatch[1]] || '';
         }
-        return '';
+        return fallbackEmu || '';
     })();
     const resolvedDisplayName = displayName || (romPaths.names[romKey] || romKey || fallbackTarget);
 
@@ -763,12 +857,14 @@ async function initApp() {
 
     // Load and display playtimes
     const playtimes = await window.electronAPI.getPlaytimes();
+    window.cachedPlaytimes = playtimes;
     document.querySelectorAll('.game-card').forEach(card => {
         const key = card.dataset.gameKey;
         const time = playtimes[key] || 0;
         const span = card.querySelector('.playtime');
         if (span) span.textContent = `Playtime: ${formatPlaytime(time)}`;
     });
+    renderRecentGameButton(playtimes);
 
     const startFS = getPref('fullscreen-pref', false);
     syncFullscreenUI(startFS);
@@ -851,9 +947,9 @@ function openIntelMenu(e, cardElement) {
     activeIntelCard = cardElement;
 
     const clickAttr = cardElement.getAttribute('onclick') || "";
-    const targetMatch = clickAttr.match(/missionControl\(event,\s*'[^']+',\s*(?:romPaths\.([A-Z0-9_]+)|'([^']+)')/);
+    const targetMatch = clickAttr.match(/missionControl\(event,\s*['"][^'"]+['"],\s*(?:romPaths\.([A-Z0-9_]+)|['"]([^'"]+)['"])/);
     const target = targetMatch?.[1] ? romPaths[targetMatch[1]] : (targetMatch?.[2] || '');
-    const emuMatch = clickAttr.match(/missionControl\(event,\s*'[^']+',\s*(?:romPaths\.[A-Z0-9_]+|'[^']+'),\s*(?:emuPaths\.([A-Z0-9_]+)|'([^']*)')/);
+    const emuMatch = clickAttr.match(/missionControl\(event,\s*['"][^'"]+['"],\s*(?:romPaths\.[A-Z0-9_]+|['"][^'"]+['"]),\s*(?:emuPaths\.([A-Z0-9_]+)|['"]([^'"]*)['"])/);
     const emuPath = emuMatch?.[1] ? emuPaths[emuMatch[1]] : (emuMatch?.[2] || '');
     const gameContext = getCardGameContext(cardElement, target, emuPath);
     const detectedKey = gameContext.romKey || 'UNKNOWN_MISSION';
@@ -867,7 +963,7 @@ function openIntelMenu(e, cardElement) {
         document.body.appendChild(menu);
     }
 
-    const isEmu = clickAttr.includes("'emu'");
+    const isEmu = /missionControl\(event,\s*['"]emu['"]/.test(clickAttr);
     const saveButton = isEmu 
         ? `<div class="intel-menu-item" onclick="openSaveManager(event, '${escapeAttr(detectedKey)}', '${escapeAttr(detectedEmu)}', '${escapeAttr(displayName)}')">[ MANAGE SAVES ]</div>` 
         : '';
@@ -905,7 +1001,8 @@ async function openSaveManager(e, romKey, emuPath, displayName) {
     let overlay = document.getElementById('save-manager-overlay');
     if (!overlay) {
         try {
-            const response = await fetch("../../pages/save-manager.html");
+            const saveManagerPath = `${getAppRootUrl()}/pages/save-manager.html`;
+            const response = await fetch(saveManagerPath);
             const html = await response.text();
             
             overlay = document.createElement('div');
@@ -980,6 +1077,9 @@ function missionControl(event, type, target, emu, steamExe = "") {
             gameKey = gameContext.romKey;
         }
 
+        saveLastPlayedGame(gameContext, type, target, emu, steamExe);
+        renderRecentGameButton(window.cachedPlaytimes || {});
+
         window.electronAPI.launchMission({
             type,
             target,
@@ -990,6 +1090,7 @@ function missionControl(event, type, target, emu, steamExe = "") {
             legacyKeys: gameContext.legacyKeys
         });
         
+        localStorage.setItem('running-game-key', gameKey);
         document.querySelectorAll('.game-card').forEach(c => c.classList.remove('running'));
         card.classList.add('running');
     }
@@ -1052,6 +1153,7 @@ function runMasterFilter() {
 
 // --- 6. EVENT LISTENERS ---
 window.electronAPI.onMissionEnd(async (data) => {
+    localStorage.removeItem('running-game-key');
     document.querySelectorAll('.game-card').forEach(c => c.classList.remove('running'));
     
     // Refresh playtimes from backend
